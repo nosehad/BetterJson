@@ -86,6 +86,7 @@ static inline char* _sjs_parsePair(char*p, SQTree*json)
             val = "null"; 
             _start = val;
             _end = val + 3;
+            p = p +4;
             break;
         /* booleans with value false */ 
         case 'f':
@@ -93,6 +94,7 @@ static inline char* _sjs_parsePair(char*p, SQTree*json)
             val = "false"; 
             _start = val;
             _end = val + 4;
+            p = p +5;
             break;
         /* booleans with value true */    
         case 't':
@@ -100,15 +102,7 @@ static inline char* _sjs_parsePair(char*p, SQTree*json)
             val = "true"; 
             _start = val;
             _end = val + 3;
-            break;
-        /* json arrays */
-        case '[':
-            type = _SJS_ARRAY;
-            _start = p;
-            for(; *p != ']'; ++p)
-                if(*p == 0)
-                    return p;
-            _end = p;
+            p = p +4;
             break;
         /* numbers */
         default:
@@ -122,7 +116,7 @@ static inline char* _sjs_parsePair(char*p, SQTree*json)
     }
 
     /* create value */
-    char* value = (char*)malloc((_end-_start)+2);
+    char* value = (char*)malloc((_end-_start)+2 /* +2 to add type and \00 footer */);
     /* set value type */
     *value = type;
     _sjs_copy(value+1, _start, _end);
@@ -134,13 +128,12 @@ static inline char* _sjs_parsePair(char*p, SQTree*json)
     return p; /* return current state of p*/
 }
 
-static inline void _sjs_copy(char*dest, char*start, char*end)
+extern inline void _sjs_copy(char*dest, char*start, char*end)
 {
     for(;start <= end; ++start, ++dest)
     {
         *dest = *start;
     }
-
 }
 
 static inline void _sjs_setKey(SString* str, char* key, char* val, int padding)
