@@ -21,6 +21,8 @@
 
     void svect_insert(SVector* vector, char* value);
 
+    extern inline void svect_set(SVector* vector, unsigned int i, char* value);
+
     extern inline char* svect_get(SVector* vector, unsigned int index);
 
     void svect_delete(SVector*vector);

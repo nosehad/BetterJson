@@ -22,7 +22,8 @@
 
     static inline char* _sjs_parsePair(char*p, SQTree*json);
 
-    static inline void _sjs_copy(char*dest, char*start, char*end);
+    /* is also used in array parser*/
+    extern inline void _sjs_copy(char*dest, char*start, char*end);
 
     static inline void _sjs_setKey(SString* str, char* key, char* val, int padding);
 

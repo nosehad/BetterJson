@@ -8,22 +8,16 @@
     #include <stdio.h>
 
     #include "SVector.h"
-
-    enum _sjs_datatypes
-    {
-        _SJS_JSON = 1,
-        _SJS_ARRAY = 2,
-        _SJS_NUM = 3,
-        _SJS_NULL = 4,
-        _SJS_STRING = 5,
-        _SJS_BOOL = 6
-    };
+    #include "SString.h"
+    #include "SJsonParser.h"
 
     SVector* sjs_arr_parseString(char*str);
 
-    SString*_sjs_arr_toString(SVector*arr, int init_padding);
+    static inline char* _sjs_arr_getitem(char*p, SVector* vect);
 
-    #define sjs_toString(json) _sjs_toString(json, 2)
+    static inline char* _sjs_arr_getopen(char*str);
+
+    SString* sjs_arr_toString(SVector*arr, int init_padding);
 
     #ifdef __cplusplus
         }
