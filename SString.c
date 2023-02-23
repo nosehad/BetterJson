@@ -382,6 +382,90 @@ extern inline unsigned int sstr_gsize(SString* str)
     return str->s_size;
 }
 
+char* sstr_convertQWORDToCStr(long long i)
+{
+    /* check for special cases */
+    char in;
+    if(i < 0) /* number negative */
+    {
+        in = 1;
+        i *= -1;
+    }
+    else if(i == 0) /* number is 0 */
+        return "0";
+    else /* number is positive */
+        in = 0;
+
+
+    char* _str = (char*)malloc(21 /* max length of 32 bit integral string */);
+    char* str = _str+10;
+    for(;i != 0;str--, i /= 10)
+    {
+        *str = i % 10 + '0';
+    }
+    if(in) /* if number is negative */
+    {
+        *str = '-';
+        str--;
+    }
+    return _str+(str-_str+1);
+}
+
+char* sstr_convertUQWORDToCStr(unsigned long long i)
+{
+    if(i == 0)
+        return "0";
+
+
+    char* _str = (char*)malloc(20 /* max length of 64 bit integral string */);
+    char* str = _str+9;
+    for(;i != 0;str--, i /= 10)
+        *str = i % 10 + '0';
+    return _str+(str-_str+1);
+}
+
+char* sstr_convertIntToCStr(int i)
+{
+    /* check for special cases */
+    char in;
+    if(i < 0) /* number negative */
+    {
+        in = 1;
+        i *= -1;
+    }
+    else if(i == 0) /* number is 0 */
+        return "0";
+    else /* number is positive */
+        in = 0;
+
+
+    char* _str = (char*)malloc(12 /* max length of 32 bit integral string */);
+    char* str = _str+10;
+    for(;i != 0;str--, i /= 10)
+    {
+        *str = i % 10 + '0';
+    }
+    if(in) /* if number is negative */
+    {
+        *str = '-';
+        str--;
+    }
+    return _str+(str-_str+1);
+}
+
+char* sstr_convertUIntToCStr(unsigned int i)
+{
+    if(i == 0)
+        return "0";
+
+
+    char* _str = (char*)malloc(11 /* max length of 32 bit integral string */);
+    char* str = _str+9;
+    for(;i != 0;str--, i /= 10)
+        *str = i % 10 + '0';
+    return _str+(str-_str+1);
+}
+
 void sstr_fill(SString* base, char ch, unsigned int amount)
 {
     unsigned int c = base->s_size + amount;

@@ -64,6 +64,10 @@
     extern inline int sstr_isEmpty(SString* str);
     extern inline void sstr_clear(SString* str);
     extern inline unsigned int sstr_gsize(SString* str);
+    char* sstr_convertQWORDToCStr(long long i);
+    char* sstr_convertUQWORDToCStr(unsigned long long i);
+    char* sstr_convertIntToCStr(int i);
+    char* sstr_convertUIntToCStr(unsigned int i);
     // appends char ch a certain amount to str
     void sstr_fill(SString* str, char ch, unsigned int amount);
     // starts parsing at end of <str>
