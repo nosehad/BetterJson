@@ -304,7 +304,11 @@ void*sqtr_pop(SQTree* tree, char* key)
     }
 }
 
-extern inline SQNode*sqtr_popl(SQTree* tree)
+#ifndef __cplusplus
+    extern inline SQNode*sqtr_popl(SQTree* tree)
+#else
+    SQNode*sqtr_popl(SQTree* tree)
+#endif
 {
     SQNode*_tree = tree;
     SQNode*previous = tree;
@@ -338,9 +342,13 @@ extern inline SQNode*sqtr_popl(SQTree* tree)
     }
 }
 
-extern inline void sqtr_free(SQTree*tree)
+#ifndef __cplusplus
+    extern inline void sqtr_free(SQTree*tree)
+#else
+    void sqtr_free(SQTree*tree)
+#endif
 {
-    for(;sqtr_empty(tree);free(sqtr_popl(tree)));
+    for(;!sqtr_empty(tree);free(sqtr_popl(tree)));
     free(tree);
 }
 

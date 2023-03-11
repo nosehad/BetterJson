@@ -19,6 +19,8 @@
 
     SString* sjs_arr_toString(SVector*arr, int init_padding);
 
+    void sjs_arr_delete(SVector* arr);
+
     #ifdef __cplusplus
         }
     #endif

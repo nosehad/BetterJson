@@ -111,3 +111,13 @@ SString* sjs_arr_toString(SVector*arr, int init_padding)
     sstr_appendc(str, ']');
     return str;
 }
+
+void sjs_arr_delete(SVector* arr)
+{
+    char** start = arr->vect;
+    char** end = arr->vect + arr->size;
+    for(;start != end; ++start)
+        free(*start);
+    free(arr->vect);
+    free(arr);
+}

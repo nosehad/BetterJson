@@ -39,10 +39,17 @@
     void sqtr_delete(SQTree* tree, char* key);
     /* marks node with <key> as free returns value of node that belongs to <key> */
     void*sqtr_pop(SQTree* tree, char* key);
-    /* pop leftmost element of tree */
-    extern inline SQNode*sqtr_popl(SQTree* tree);
-    /* completely deletes whole tree */
-    extern inline void sqtr_free(SQTree*tree);
+    #ifndef __cplusplus
+        /* pop leftmost element of tree */
+        extern inline SQNode*sqtr_popl(SQTree* tree);
+        /* completely deletes whole tree */
+        extern inline void sqtr_free(SQTree*tree);
+    #else
+        /* pop leftmost element of tree */
+        SQNode*sqtr_popl(SQTree* tree);
+        /* completely deletes whole tree */
+        void sqtr_free(SQTree*tree);
+    #endif 
     /* used to insert node at specific point */
     static inline void _sqtr_insertn(SQNode* start, unsigned int startb, SQNode* insert);
     /* prints entire tree */

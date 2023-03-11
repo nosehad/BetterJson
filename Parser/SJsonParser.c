@@ -179,3 +179,13 @@ SString*_sjs_toString(SQTree*json, int padding)
     }
     sstr_appendcs(ret, "}");
 }
+
+void sjs_delete(SQTree* json)
+{
+    for(SQNode* node;!sqtr_empty(json);node = sqtr_popl(json))
+    {
+        free(node->key);
+        free(node->value);
+    }
+    free(json);
+}

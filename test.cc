@@ -42,6 +42,9 @@ int main()
     SVector* parsedj = sjs_arr_parseString(buff);
     //svect_set(parsedj, 1, "sdasd");
     printf("%s\n", svect_get(parsedj, 1 ));
-    sstr_print(sjs_arr_toString(parsedj,2));
+    SString* parsed_array = sjs_arr_toString(parsedj,2);
+    sstr_print(parsed_array);
+    sstr_delete(parsed_array);
+    sjs_arr_delete(parsedj);
 }
 // 1m14.519s
