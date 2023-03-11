@@ -19,12 +19,20 @@ void svect_insert(SVector* vector, char* value)
 
 }
 
-extern inline void svect_set(SVector* vector, unsigned int i, char* value)
+#ifndef __cplusplus
+    extern inline void svect_set(SVector* vector, unsigned int i, char* value)
+#else
+     void svect_set(SVector* vector, unsigned int i, char* value)
+#endif
 {
     *(vector->vect+i) = value;
 }
 
-extern inline char* svect_get(SVector* vector, unsigned int index)
+#ifndef __cplusplus
+    extern inline char* svect_get(SVector* vector, unsigned int index)
+#else
+     char* svect_get(SVector* vector, unsigned int index)
+#endif
 {
     return *(vector->vect+index);
 }

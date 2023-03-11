@@ -31,6 +31,8 @@
 
     SString*_sjs_toString(SQTree*json, int padding);
 
+    void sjs_delete(SQTree* json);
+
     #define sjs_toString(json) _sjs_toString(json, 2)
 
     #ifdef __cplusplus
