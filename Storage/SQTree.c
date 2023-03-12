@@ -17,7 +17,7 @@ SQTree* sqtr_clone(SQTree* tree)
     return res;
 }
 
-static inline int sqtr_keyeqval(char*key1, char*key2)
+STATIC_I int sqtr_keyeqval(char*key1, char*key2)
 {
     for(;*key1!=null; key1++, key2++)
     {
@@ -56,8 +56,9 @@ void _sqtr_clonen(SQNode* node1, SQNode* node2)
     }
 }
 
-void sqtr_set(SQTree* tree, char* key, char* value)
+void sqtr_setNoCopy(SQTree* tree, char* key, char* value)
 {
+    /* no copy*/
     char*_key = key;
     /* right shift bits */
     unsigned char shifting_bits = 0;
@@ -104,6 +105,61 @@ void sqtr_set(SQTree* tree, char* key, char* value)
     }
 }
 
+void sqtr_set(SQTree* tree, char* key, char* value)
+{
+    /* copy value */
+    sstr_createeOnStack(value_string);
+    sstr_appendcs(value_string, value);
+    char*_key = key;
+    /* right shift bits */
+    unsigned char shifting_bits = 0;
+    for(;*key != 0; shifting_bits++)
+    {
+        if(tree->key != null && sqtr_keyeqval(tree->key, _key) == 1)
+        {
+            tree->value = sstr_serialize(value_string);
+            return;
+        }
+        if(shifting_bits == 8)
+        {
+            shifting_bits = 0;
+            key++; /* increase byte right shift*/
+        }
+        if(((*key) >> shifting_bits) & 1)
+        {
+            if(tree->rn == null) /* if right node is null -> set right node to insert node */
+            {
+                SQNode* insert = (SQNode*)malloc(sizeof(SQNode));
+                insert->rn = null;
+                insert->ln = null;
+                sstr_createeOnStack(key_string);
+                sstr_appendcs(key_string, key);
+                insert->key = sstr_serialize(key_string);
+                insert->value = sstr_serialize(value_string);
+                tree->rn = insert;
+                return;
+            }
+            /* not directly set tree node, to reinsert leafs of node that is beeing removed */
+            tree = tree->rn; 
+            continue;
+        }
+        if(tree->ln == null) /* if left node is null -> set left node to insert node */
+        { 
+            SQNode* insert = (SQNode*)malloc(sizeof(SQNode));
+            insert->rn = null;
+            insert->ln = null;
+            sstr_createeOnStack(key_string);
+            sstr_appendcs(key_string, key);
+            insert->key = sstr_serialize(key_string);
+            insert->value = sstr_serialize(value_string);
+            tree->ln = insert;
+            return;
+        }
+        tree = tree->ln;
+        continue;
+    }
+}
+
 void* sqtr_get(SQTree* tree, char* key)
 {
     char*_key = key;
@@ -140,7 +196,12 @@ void* sqtr_get(SQTree* tree, char* key)
     }
 }
 
-static inline void _sqtr_insertn(SQNode* start, unsigned int startb, SQNode* insert)
+EXTERN_I int sqtr_contains(SQTree* tree, char* key)
+{
+    return sqtr_get(tree, key) == null;
+}
+
+STATIC_I void _sqtr_insertn(SQNode* start, unsigned int startb, SQNode* insert)
 {
     /* recursively insert subnodes */
     if(insert->rn != null)
@@ -304,11 +365,8 @@ void*sqtr_pop(SQTree* tree, char* key)
     }
 }
 
-#ifndef __cplusplus
-    extern inline SQNode*sqtr_popl(SQTree* tree)
-#else
-    SQNode*sqtr_popl(SQTree* tree)
-#endif
+
+EXTERN_I SQNode*sqtr_popl(SQTree* tree)
 {
     SQNode*_tree = tree;
     SQNode*previous = tree;
@@ -342,13 +400,20 @@ void*sqtr_pop(SQTree* tree, char* key)
     }
 }
 
-#ifndef __cplusplus
-    extern inline void sqtr_free(SQTree*tree)
-#else
-    void sqtr_free(SQTree*tree)
-#endif
+EXTERN_I void sqtr_free(SQTree*tree)
 {
-    for(;!sqtr_empty(tree);free(sqtr_popl(tree)));
+    if(sqtr_empty(tree))
+        return;
+    for(SQNode* node = sqtr_popl(tree);;node = sqtr_popl(tree))
+    {
+        if(node->key != null)
+            free(node->key);
+        if(node->value != null)
+            free(node->value);
+        free(node);
+        if(sqtr_empty(tree))
+            break;
+    }
     free(tree);
 }
 
@@ -378,7 +443,7 @@ debug void sqtr_printn(SQTree*tree, SQNode*node, int col, int row)
     /* move cursor down */
     printf("\033[%dB", row);
     /* using SString to get lenght of string */
-    SString* str = sstr_createe(); /* string representates key of current node */
+    sstr_createeOnStack(str); /* string representates key of current node */
     if(node->key != null)
         sstr_appendcs(str, node->key);
     else
@@ -431,7 +496,7 @@ debug void sqtr_printnbin(SQTree*tree, SQNode*node, int col, int row, char val)
     /* move cursor down */
     printf("\033[%dB", row);
     /* using SString to get lenght of string */
-    SString* str = sstr_createe(); /* string representates key of current node */
+    sstr_createeOnStack(str); /* string representates key of current node */
     sstr_appendd(str, val);
     printf("\033[%dm", 30 + rand()%9); /* colour text */
     sstr_printf(str);

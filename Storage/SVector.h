@@ -8,6 +8,8 @@
     #include <stdlib.h>
     #include <stdio.h>
 
+    #include "../Utils/inline.h"
+
     typedef struct _SVector SVector;
 
     struct _SVector
@@ -19,13 +21,8 @@
 
     SVector* svect_create();
     void svect_insert(SVector* vector, char* value);
-    #ifndef __cplusplus
-        extern inline void svect_set(SVector* vector, unsigned int i, char* value);
-        extern inline char* svect_get(SVector* vector, unsigned int index);
-    #else
-         void svect_set(SVector* vector, unsigned int i, char* value);
-         char* svect_get(SVector* vector, unsigned int index);
-    #endif
+    EXTERN_I void svect_set(SVector* vector, unsigned int i, char* value);
+    EXTERN_I char* svect_get(SVector* vector, unsigned int index);
     void svect_delete(SVector*vector);
     #ifdef __cplusplus
         }
