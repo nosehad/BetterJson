@@ -6,6 +6,10 @@
 
     #include <stdio.h>
 
+    #include "JsonValue.h"
+    #include "SJsonParserA.h"
+    #include "../Utils/inline.h"
+    #include "../Utils/Convert.h"
     #include "../Storage/SQTree.h"
 
     enum _sjs_datatypes
@@ -18,14 +22,8 @@
         _SJS_BOOL = 6
     };
 
-    static inline char* _sjs_parseOpen(char*p);
-
-    static inline char* _sjs_parsePair(char*p, SQTree*json);
-
     /* is also used in array parser*/
-    extern inline void _sjs_copy(char*dest, char*start, char*end);
-
-    static inline void _sjs_setKey(SString* str, char* key, char* val, int padding);
+    EXTERN_I void _sjs_copy(char*dest, char*start, char*end);
 
     SQTree* sjs_parseString(char*str);
 

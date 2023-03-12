@@ -11,11 +11,7 @@ SString* sstr_createcs(char* str)
     sstring->s_str = (char*) malloc(sstring->s_capacity);
 
     for(;*str != 0; str++)
-    {
         sstr_appendc(sstring, *str);
-    }
-    sstr_appendc(sstring, null);
-    sstring->s_size--;
     return sstring;
 }
 
@@ -28,9 +24,6 @@ SString* sstr_creates(char* str, sstr_size size)
     sstring->s_str = (char*)malloc(size);
     memcpy(sstring->s_str, str, size);
 
-    sstr_appendc(sstring, null);
-    sstring->s_size--;
-
     return sstring;
 }
 
@@ -41,11 +34,33 @@ SString* sstr_createe()
     sstring->s_capacity = 2;
     sstring->s_size = 0;
     sstring->s_str = (char*) malloc(sstring->s_capacity);
-    
-    sstr_appendc(sstring, null);
-    sstring->s_size--;
 
     return sstring;
+}
+
+SString* sstr_createff(char* path)
+{
+    struct stat stat;
+    int fd = open(path, O_RDONLY);
+
+    if (fd == -1) {
+        perror("Error opening file: ");
+        exit(EXIT_FAILURE);
+    }
+
+    if (fstat(fd, &stat) == -1) {
+        perror("Error getting file information: ");
+        exit(EXIT_FAILURE);
+    }
+
+    SString* res = (SString*)malloc(sizeof(SString));
+    res->s_str = (char*)malloc(stat.st_size + 1);
+    res->s_size = stat.st_size;
+    res->s_capacity = stat.st_size + 1;
+    read(fd, res->s_str, stat.st_size);
+
+    close(fd);
+    return res;
 }
 
 SString* sstr_clone(SString* str)
@@ -58,16 +73,27 @@ SString* sstr_clone(SString* str)
     return ret;
 }
 
-extern inline void sstr_truncate(struct _sstring*str, sstr_size size)
+EXTERN_I void sstr_truncate(struct _sstring*str, sstr_size size)
 {
     str->s_size = size;
     /* extend size of string */
     for(;str->s_capacity < str->s_size; str->s_capacity *= 2)
         str->s_str = (char*)realloc(str->s_str, str->s_capacity);
-    *(str->s_str + str->s_size++) = 0;
 }
 
-extern inline void sstr_appendc(SString* str, char ch)
+EXTERN_I char* sstr_serialize(SString* str)
+{
+    if(str->s_capacity == str->s_size)
+    {
+        str->s_capacity *= 2;
+        str->s_str = (char*)realloc(str->s_str, str->s_capacity);
+    }
+    *(str->s_str +1)= 0;
+    return str->s_str;
+}
+
+
+EXTERN_I void sstr_appendc(SString* str, char ch)
 {
     if(str->s_capacity == str->s_size)
     {
@@ -82,12 +108,7 @@ void sstr_appendcs(struct _sstring* base, char* str)
 {
     char* ch;
     for(ch = str;*ch != null;ch++)
-    {
        sstr_appendc(base, *ch);
-    }
-    
-    sstr_appendc(base, null);
-    base->s_size--;
 }
 
 void sstr_appends(SString* base, char* str, unsigned int size)
@@ -140,22 +161,6 @@ signed int sstr_equals_mo(SString* base, char opts, ...)
     return -1;
 }
 
-int sstr_endswith(SString* base, char* end, unsigned int end_size)
-{
-    if(end_size > base->s_size)
-        return 0;
-    unsigned int sp = base->s_size - end_size;
-    unsigned int i;
-    for(i = 0; i < end_size; i++)
-    {
-        if(*(end+i) != *(base->s_str + sp + i))
-        {
-            return 0;
-        }
-    }
-    return 1;
-}
-
 signed int sstr_cstr_equals_mo(char* str, unsigned char opts, ...)
 {
     va_list arguments;                     
@@ -179,6 +184,22 @@ signed int sstr_cstr_equals_mo(char* str, unsigned char opts, ...)
     return -1;
 }
 
+int sstr_endswith(SString* base, char* end, unsigned int end_size)
+{
+    if(end_size > base->s_size)
+        return 0;
+    unsigned int sp = base->s_size - end_size;
+    unsigned int i;
+    for(i = 0; i < end_size; i++)
+    {
+        if(*(end+i) != *(base->s_str + sp + i))
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 int sstr_startswith(SString* base, char* start, unsigned int start_size)
 {
     if(start_size > base->s_size)
@@ -194,7 +215,31 @@ int sstr_startswith(SString* base, char* start, unsigned int start_size)
     return 1;
 }
 
-static inline int sstr_smallerth(SString* str1, SString* str2)
+EXTERN_I unsigned long long sstr_toLong(SString* str)
+{
+    unsigned long long ret = 1;
+    int i;
+    for(i = 0; i < str->s_size; ++i)
+    {
+        ret += *(str->s_str + i);
+        ret <<= 1;
+    }
+    return ret;
+}
+
+EXTERN_I unsigned long long sstr_cs_toLong(char* str)
+{
+    unsigned long long ret = 1;
+    int i;
+    for(;*str != 0;str++)
+    {
+        ret += *str;
+        ret <<= 1;
+    }
+    return ret;
+}
+
+STATIC_I int sstr_smallerth(SString* str1, SString* str2)
 {
     int size = str1->s_size > str2->s_size ? str1->s_size : str2->s_size;
     int i;
@@ -220,22 +265,20 @@ int sstr_bigger(SString* str1, SString* str2)
 
 void sstr_delete(SString* sstr)
 {
+    //sstr_print(sstr);
     free(sstr->s_str);
     free(sstr);
 }
 
-static inline void sstr_remove(SString* str, unsigned int a, unsigned int b)
+STATIC_I void sstr_remove(SString* str, unsigned int a, unsigned int b)
 {
     //printf("%d %d\n", str->s_size, b);
     //printf("%d %d %d\n", str->s_str +a, str->s_str+b, str->s_size-b);
     memmove(str->s_str +a, str->s_str+b, str->s_size-b);
     str->s_size -= (b-a);
-
-    sstr_appendc(str, null);
-    str->s_size--;
 }
 
-static inline void sstr_removeAll(SString* str, char* remove, unsigned int size)
+STATIC_I void sstr_removeAll(SString* str, char* remove, unsigned int size)
 {
     int p = 0;
     int end_p;
@@ -257,8 +300,6 @@ static inline void sstr_removeAll(SString* str, char* remove, unsigned int size)
         ++p;
         goto loop;
     }
-    sstr_appendc(str, null);
-    str->s_size--;
 }
 
 void sstr_replaceAll(SString* str, char* target, unsigned int tsize, char* replacement, unsigned int rsize)
@@ -297,7 +338,7 @@ void sstr_printf(SString* str)
     fwrite(str->s_str, str->s_size, 1, stdout); 
 }
 
-static inline void sstr_insert(SString* str, unsigned int pos, char* insert, unsigned int isize)
+STATIC_I void sstr_insert(SString* str, unsigned int pos, char* insert, unsigned int isize)
 {
     extend: if(str->s_capacity < str->s_size+isize)
     {
@@ -364,7 +405,7 @@ void sstr_appendd(struct _sstring* base, long long num)
     sstr_appends(base, appe + (64-i), i);
 }
 
-extern inline int sstr_isEmpty(SString* str)
+EXTERN_I int sstr_isEmpty(SString* str)
 {
     return (str->s_size == 0);
 }
@@ -372,11 +413,9 @@ extern inline int sstr_isEmpty(SString* str)
 void sstr_clear(SString* str)
 {
     str->s_size = 0;
-    sstr_appendc(str, null); // set to 0, that printf outputs an empty string
-    str->s_size--;
 }
 
-extern inline unsigned int sstr_gsize(SString* str)
+EXTERN_I unsigned int sstr_gsize(SString* str)
 {
     return str->s_size;
 }
@@ -391,22 +430,16 @@ void sstr_fill(SString* base, char ch, unsigned int amount)
         goto extend;
     }
     for(;base->s_size < c;base->s_size++)
-    {
         *(base->s_str + base->s_size) = ch;
-    }
 }
 
 void sstr_removeFromEndAfter(SString* str, char target)
 {
     for(;(str->s_size > 0) && (*(str->s_str +str->s_size) != target); str->s_size--);
     str->s_size++;
-    sstr_appendc(str, null);
-    str->s_size--;
 }
 
 void sstr_removeFromEnd(SString* string, unsigned int amount)
 {
     string->s_size-=amount;
-    sstr_appendc(string, null);
-    string->s_size--;
 }

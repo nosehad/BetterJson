@@ -1,17 +1,30 @@
 #include "SJsonParser.h"
 
-SQTree* sjs_parseString(char*str)
+EXTERN_I void _sjs_copy(char*dest, char*start, char*end)
 {
-    SQTree*json = sqtr_create();
-    str = _sjs_parseOpen(str);
-    for(;*str != null; ++str)
+    for(;start <= end; ++start, ++dest)
     {
-        str = _sjs_parsePair(str, json);
+        *dest = *start;
     }
-    return json;
 }
 
-static inline char* _sjs_parseOpen(char*p)
+STATIC_I void _sjs_setKey(SString* str, char* key, char* val, int padding)
+{
+    for(;padding>0;padding--)
+        sstr_appendc(str, ' ');
+    sstr_appendc(str, '\"');
+    sstr_appendcs(str, key);
+    sstr_appendcs(str, "\":");
+    if(*val == _SJS_STRING)
+    {
+        sstr_appendc(str, '\"');
+        sstr_appendcs(str, val+1);
+        sstr_appendc(str, '\"');
+    } else 
+        sstr_appendcs(str, val+1);
+}
+
+STATIC_I char* _sjs_parseOpen(char*p)
 {
     for(;*p != null; ++p)
     {
@@ -21,7 +34,8 @@ static inline char* _sjs_parseOpen(char*p)
     return p;
 }
 
-static inline char* _sjs_parsePair(char*p, SQTree*json)
+
+STATIC_I char* _sjs_parsePair(char*p, SQTree*json)
 {
     for(;*p == ' ' || *p == ',' || *p == '"' || *p == '\n' || *p == '}' || *p == '{';++p)
         if(*p == 0)
@@ -51,7 +65,7 @@ static inline char* _sjs_parsePair(char*p, SQTree*json)
             type = _SJS_JSON;
             _start = p;
             c = 1;
-            for(;; ++p)
+            for(++p;; ++p)
             {
                 if(*p == 0)
                     return p;
@@ -123,34 +137,120 @@ static inline char* _sjs_parsePair(char*p, SQTree*json)
     _sjs_copy(value+1, _start, _end);
 
     /* insert value to tree */
-    sqtr_set(json, key, value);
+    sqtr_setNoCopy(json, key, value);
     /* increase p until row is over */
     for(;*p != ',' && *p != '}' && *p != 0; ++p);
     return p; /* return current state of p*/
 }
 
-extern inline void _sjs_copy(char*dest, char*start, char*end)
+/* get functions */
+EXTERN_I JsonValue sjs_getValue(SQTree* json, unsigned char* key)
 {
-    for(;start <= end; ++start, ++dest)
+    char* result = svect_get(json, key);
+    JsonValue value;
+    switch (*(result++))
     {
-        *dest = *start;
+        case _SJS_NUM:
+            /* examine exact number type */
+            switch (convert_getType(result))
+            {
+                case NT_FLOAT:
+                    value._double = convert_CStrToDouble(result);
+                    return value;
+                case NT_INT:
+                    value._int = convert_CStrToInt(result);
+                    return value;
+                case NT_LONG:
+                    value._long = convert_CStrToLong(result);
+                    return value;
+                case NT_NONE: /* check if number is false detected */
+                    value._string = null;
+                    return value;
+            }
+        case _SJS_STRING:
+            value._string = result;
+            return value;
+        case _SJS_NULL:
+            value._string = 0;
+            return value;
+        case _SJS_JSON:
+            value._jsonData = sjs_parseString(result);
+            return value;
+        case _SJS_ARRAY:
+            value._jsonArray = sjs_arr_parseString(result);
+            return value;
+        case _SJS_BOOL:
+            value._bool = strcmp(result, "true") == 0;
+            return value;
+        default:
+            value._string = null;
+            return value;
     }
 }
 
-static inline void _sjs_setKey(SString* str, char* key, char* val, int padding)
+EXTERN_I JsonValueType sjs_getValueAndType(SQTree* json, char* key)
 {
-    for(;padding>0;padding--)
-        sstr_appendc(str, ' ');
-    sstr_appendc(str, '\"');
-    sstr_appendcs(str, key);
-    sstr_appendcs(str, "\":");
-    if(*val == _SJS_STRING)
+    char* result = sqtr(json, key);
+    JsonValueType type;
+    switch (*(result++))
     {
-        sstr_appendc(str, '\"');
-        sstr_appendcs(str, val+1);
-        sstr_appendc(str, '\"');
-    } else 
-        sstr_appendcs(str, val+1);
+        case _SJS_NUM:
+            /* examine exact number type */
+            switch (convert_getType(result))
+            {
+                case NT_FLOAT:
+                    type.value._double = convert_CStrToDouble(result);
+                    type.type = _SJS_NUM;
+                    return type;
+                case NT_INT:
+                    type.value._int = convert_CStrToInt(result);
+                    type.type = _SJS_NUM;
+                    return type;
+                case NT_LONG:
+                    type.value._long = convert_CStrToLong(result);
+                    type.type = _SJS_NUM;
+                    return type;
+                case NT_NONE: /* check if number is false detected */
+                    type.value._string = null;
+                    type.type = _SJS_NUM;
+                    return type;
+            }
+        case _SJS_STRING:
+            type.value._string = result;
+            type.type = _SJS_STRING;
+            return type;
+        case _SJS_NULL:
+            type.value._string = 0;
+            type.type = _SJS_NULL;
+            return type;
+        case _SJS_JSON:
+            type.value._jsonData = sjs_parseString(result);
+            type.type = _SJS_JSON;
+            return type;
+        case _SJS_ARRAY:
+            type.value._jsonArray = sjs_arr_parseString(result);
+            type.type = _SJS_ARRAY;
+            return type;
+        case _SJS_BOOL:
+            type.value._bool = strcmp(result, "true") == 0;
+            type.type = _SJS_BOOL;
+            return type;
+        default:
+            type.value._string = null;
+            type.type = _SJS_NULL;
+            return type;
+    }
+}
+
+SQTree* sjs_parseString(char*str)
+{
+    SQTree*json = sqtr_create();
+    str = _sjs_parseOpen(str);
+    for(;*str != null; ++str)
+    {
+        str = _sjs_parsePair(str, json);
+    }
+    return json;
 }
 
 SString*_sjs_toString(SQTree*json, int padding)
@@ -178,14 +278,4 @@ SString*_sjs_toString(SQTree*json, int padding)
         current = sqtr_popl(json);
     }
     sstr_appendcs(ret, "}");
-}
-
-void sjs_delete(SQTree* json)
-{
-    for(SQNode* node;!sqtr_empty(json);node = sqtr_popl(json))
-    {
-        free(node->key);
-        free(node->value);
-    }
-    free(json);
 }

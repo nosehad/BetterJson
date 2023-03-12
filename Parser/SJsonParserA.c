@@ -1,5 +1,11 @@
 #include "SJsonParserA.h"
 
+STATIC_I char* _sjs_arr_getopen(char*str)
+{
+    for(;*str != '[' && *str != 0; ++str);
+    return str+1;
+}
+
 SVector* sjs_arr_parseString(char*str)
 {
     //printf("%s\n", str);
@@ -7,20 +13,17 @@ SVector* sjs_arr_parseString(char*str)
     str = _sjs_arr_getopen(str);
             //printf("%s\n", str);
     for(;*str != ']' && *str != 0; ++str)
-    {
-        str = _sjs_arr_getitem(str, vect);
-    }
+        if(*str != ' ' && *str != '\n' && *str != ',')
+            str = _sjs_arr_getitem(str, vect);
     return vect;
 }
 
-static inline char* _sjs_arr_getitem(char*p, SVector* vect)
+STATIC_I char* _sjs_arr_getitem(char*p, SVector* vect)
 {
     char* _start;
     char* _end;
-    for(;*p == ' ' || *p == '\n' || *p == ',';++p);
-    if(*p == 0)
-        return p;
     int type = 0;
+    int c = 1;
     /* switch through different possibilities */
     switch (*p)
     {
@@ -61,8 +64,37 @@ static inline char* _sjs_arr_getitem(char*p, SVector* vect)
             _end = val + 3;
             p = p +4;
             break;
+        /* json as key */
+        case '{':
+            type = _SJS_JSON;
+            _start = p;
+            for(++p;; ++p)
+            {
+                if(*p == 0)
+                    return p;
+                else if(*p == '{')
+                    ++c;
+                else if(*p == '}')
+                {
+                    --c;
+                    if(c == 0)
+                    {
+                        _end = p;
+                        break;
+                    }
+                }
+            }
+            break;
         /* numbers */
         default:
+            if(*p <= '0' || *p >= '9') /* nan */
+            {
+                type = _SJS_NULL;
+                _start = "NaN";
+                _end = _start + 2;
+                p = "\00";
+                break; 
+            }
             type = _SJS_NUM;
             _start = p;
             for(;*p >= '0' && *p <= '9';++p)
@@ -72,20 +104,108 @@ static inline char* _sjs_arr_getitem(char*p, SVector* vect)
             break;
     }
     /* create value */
-    char* value = (char*)malloc((_end-_start)+2 /* +2 to add type and \00 footer */);
+    int size = _end-_start;
+    char* value = (char*)malloc((size)+3 /* +2 to add type and \00 footer */);
     /* set value type */
     *value = type;
     _sjs_copy(value+1, _start, _end);
+    *(value + size + 2) = null;
 
     svect_insert(vect, value);
 
     return p;
 }
 
-static inline char* _sjs_arr_getopen(char*str)
+/* get functions */
+EXTERN_I JsonValue sjs_arr_getValue(SVector*arr, unsigned int index)
 {
-    for(;*str != '[' && *str != 0; ++str);
-    return str +1;
+    char* result = svect_get(arr, index);
+    JsonValue value;
+    switch (*(result++))
+    {
+        case _SJS_NUM:
+            /* examine exact number type */
+            switch (convert_getType(result))
+            {
+                case NT_FLOAT:
+                    value._double = convert_CStrToDouble(result);
+                    return value;
+                case NT_INT:
+                    value._int = convert_CStrToInt(result);
+                    return value;
+                case NT_LONG:
+                    value._long = convert_CStrToLong(result);
+                    return value;
+                case NT_NONE: /* check if number is false detected */
+                    value._string = null;
+                    return value;
+            }
+        case _SJS_STRING:
+            value._string = result;
+            return value;
+        case _SJS_NULL:
+            value._string = 0;
+            return value;
+        case _SJS_JSON:
+            value._jsonData = sjs_parseString(result);
+            return value;
+        case _SJS_BOOL:
+            value._bool = strcmp(result, "true") == 0;
+            return value;
+        default:
+            value._string = null;
+            return value;
+    }
+}
+
+EXTERN_I JsonValueType sjs_arr_getValueAndType(SVector*arr, unsigned int index)
+{
+    char* result = svect_get(arr, index);
+    JsonValueType type;
+    switch (*(result++))
+    {
+        case _SJS_NUM:
+            /* examine exact number type */
+            switch (convert_getType(result))
+            {
+                case NT_FLOAT:
+                    type.value._double = convert_CStrToDouble(result);
+                    type.type = _SJS_NUM;
+                    return type;
+                case NT_INT:
+                    type.value._int = convert_CStrToInt(result);
+                    type.type = _SJS_NUM;
+                    return type;
+                case NT_LONG:
+                    type.value._long = convert_CStrToLong(result);
+                    type.type = _SJS_NUM;
+                    return type;
+                case NT_NONE: /* check if number is false detected */
+                    type.value._string = null;
+                    type.type = _SJS_NUM;
+                    return type;
+            }
+        case _SJS_STRING:
+            type.value._string = result;
+            type.type = _SJS_STRING;
+            return type;
+        case _SJS_NULL:
+            type.value._string = 0;
+            type.type = _SJS_NULL;
+            return type;
+        case _SJS_JSON:
+            type.value._jsonData = sjs_parseString(result);
+            type.type = _SJS_JSON;
+            return type;
+        case _SJS_BOOL:
+            type.value._bool = strcmp(result, "true") == 0;
+            type.type = _SJS_BOOL;
+            return type;
+        default:
+            type.value._string = null;
+            type.type = _SJS_NULL;
+            return type;
+    }
 }
 
 SString* sjs_arr_toString(SVector*arr, int init_padding)

@@ -419,7 +419,9 @@
         {
             private:
             SVector* array;
-            inline JsonElement*getObject(char* raw_value, long long index) const
+            
+            inline JsonElement*
+            getObject(char* raw_value, long long index) const
             {
                 if(raw_value == null)
                     throw JsonKeyNotFoundException(std::string("No value for " + index, "found."));
