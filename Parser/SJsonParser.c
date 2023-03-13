@@ -144,9 +144,9 @@ STATIC_I char* _sjs_parsePair(char*p, SQTree*json)
 }
 
 /* get functions */
-EXTERN_I JsonValue sjs_getValue(SQTree* json, unsigned char* key)
+EXTERN_I JsonValue sjs_getValue(SQTree* json, char* key)
 {
-    char* result = svect_get(json, key);
+    char* result = (char*)sqtr_get(json, key);
     JsonValue value;
     switch (*(result++))
     {
@@ -190,7 +190,7 @@ EXTERN_I JsonValue sjs_getValue(SQTree* json, unsigned char* key)
 
 EXTERN_I JsonValueType sjs_getValueAndType(SQTree* json, char* key)
 {
-    char* result = sqtr(json, key);
+    char* result = (char*)sqtr_get(json, key);
     JsonValueType type;
     switch (*(result++))
     {

@@ -226,7 +226,7 @@
             JsonObject* 
             pop(std::string* key)
             {
-                char* raw_value = sqtr_pop(this->json, (char*)key->c_str());
+                char* raw_value = (char*)sqtr_pop(this->json, (char*)key->c_str());
                 return this->getObject(raw_value, key);
             }
 
