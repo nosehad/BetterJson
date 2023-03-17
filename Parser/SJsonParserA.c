@@ -111,7 +111,7 @@ STATIC_I char* _sjs_arr_getitem(char*p, SVector* vect)
     _sjs_copy(value+1, _start, _end);
     *(value + size + 2) = null;
 
-    svect_insert(vect, value);
+    svect_insertNoCopy(vect, value);
 
     return p;
 }
@@ -121,6 +121,11 @@ EXTERN_I JsonValue sjs_arr_getValue(SVector*arr, unsigned int index)
 {
     char* result = svect_get(arr, index);
     JsonValue value;
+    if (result == null)
+    {
+            value._string = null;
+            return value;
+    }
     switch (*(result++))
     {
         case _SJS_NUM:
@@ -162,6 +167,11 @@ EXTERN_I JsonValueType sjs_arr_getValueAndType(SVector*arr, unsigned int index)
 {
     char* result = svect_get(arr, index);
     JsonValueType type;
+    if (result == null)
+    {
+            type.value._string = null;
+            return type;
+    }
     switch (*(result++))
     {
         case _SJS_NUM:
@@ -208,7 +218,7 @@ EXTERN_I JsonValueType sjs_arr_getValueAndType(SVector*arr, unsigned int index)
     }
 }
 
-SString* sjs_arr_toString(SVector*arr, int init_padding)
+SString* _sjs_arr_toString(SVector*arr, int init_padding)
 {
     SString* str = sstr_createcs("[\n");
     for(unsigned int i = 0; i < arr->size; ++i)
@@ -229,15 +239,32 @@ SString* sjs_arr_toString(SVector*arr, int init_padding)
     }
     sstr_fill(str, ' ', init_padding-1);
     sstr_appendc(str, ']');
+    svect_delete(arr);
     return str;
 }
 
-void sjs_arr_delete(SVector* arr)
+char *_sjs_arr_toCString(SVector *arr, int init_padding)
 {
-    char** start = arr->vect;
-    char** end = arr->vect + arr->size;
-    for(;start != end; ++start)
-        free(*start);
-    free(arr->vect);
-    free(arr);
+    sstr_createsOnStack(str, "[\n", 2);
+    for (unsigned int i = 0; i < arr->size; ++i)
+    {
+        sstr_fill(str, ' ', init_padding);
+        char *val = svect_get(arr, i);
+        if (*val == _SJS_STRING)
+        {
+            sstr_appendc(str, '\"');
+            sstr_appendcs(str, val + 1);
+            sstr_appendc(str, '\"');
+        }
+        else
+            sstr_appendcs(str, val + 1);
+        if (i == (arr->size - 1))
+            sstr_appendc(str, '\n');
+        else
+            sstr_appendcs(str, ",\n");
+    }
+    sstr_fill(str, ' ', init_padding - 1);
+    sstr_appendc(str, ']');
+    svect_delete(arr);
+    return sstr_serialize(str);
 }

@@ -26,6 +26,13 @@
         public:
             InvalidValueException(const std::string& message) : std::runtime_error(message) {}
         };
+
+        /* gets thrown when trying to access an value of an invalid type */
+        class JsonArrayOutOfBoundsException : public std::runtime_error
+        {
+        public:
+            JsonArrayOutOfBoundsException(const std::string &message) : std::runtime_error(message) {}
+        };
     }
 
 #endif

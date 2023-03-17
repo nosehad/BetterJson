@@ -88,7 +88,7 @@ EXTERN_I char* sstr_serialize(SString* str)
         str->s_capacity *= 2;
         str->s_str = (char*)realloc(str->s_str, str->s_capacity);
     }
-    *(str->s_str +1)= 0;
+    *(str->s_str + str->s_size) = '\00';
     return str->s_str;
 }
 

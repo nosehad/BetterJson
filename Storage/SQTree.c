@@ -167,6 +167,7 @@ void* sqtr_get(SQTree* tree, char* key)
     unsigned char shifting_bits = 0;
     for(;*key != 0; shifting_bits++)
     {
+        printf("%s != %s", tree->key, key);
         if(tree->key != null && strcmp(tree->key, _key) == 0)
         {
             return tree->value;
@@ -464,7 +465,6 @@ debug void sqtr_printn(SQTree*tree, SQNode*node, int col, int row)
     printf("\033[%dD", str->s_size);
     printf("\033[%dD", col);
     printf("\033[%dA", row+1);
-    sstr_delete(str);
     /* print subnodes*/
     sqtr_printn(tree, node->rn, col + 2, row + 2); /* change col for tree structure */
     sqtr_printn(tree, node->ln, col - 3, row + 2);
@@ -514,7 +514,6 @@ debug void sqtr_printnbin(SQTree*tree, SQNode*node, int col, int row, char val)
     printf("\033[%dD", str->s_size);
     printf("\033[%dD", col);
     printf("\033[%dA", row+1);
-    sstr_delete(str);
     /* print subnodes*/
     sqtr_printnbin(tree, node->rn, col + 1, row + 2, 1); /* change col for tree structure */
     sqtr_printnbin(tree, node->ln, col - 2, row + 2, 0);
