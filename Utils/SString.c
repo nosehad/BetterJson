@@ -191,12 +191,8 @@ int sstr_endswith(SString* base, char* end, unsigned int end_size)
     unsigned int sp = base->s_size - end_size;
     unsigned int i;
     for(i = 0; i < end_size; i++)
-    {
         if(*(end+i) != *(base->s_str + sp + i))
-        {
             return 0;
-        }
-    }
     return 1;
 }
 
@@ -206,12 +202,8 @@ int sstr_startswith(SString* base, char* start, unsigned int start_size)
         return 0;
     unsigned int i;
     for(i = 0; i < start_size; i++)
-    {
         if(*(base->s_str+i) != *(start + i))
-        {
             return 0;
-        }
-    }
     return 1;
 }
 

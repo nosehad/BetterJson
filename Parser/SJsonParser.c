@@ -33,6 +33,73 @@ STATIC_I char *_sjs_parseOpen(char *p)
     return p;
 }
 
+struct _sjs_loadedData {
+    char* file;
+    SQTree* json_data;
+};
+
+SVector *files;
+SQTree* sjs_loadFile(char* file)
+{
+    int fd = open(file, O_RDONLY);
+    if (fd == -1)
+    {
+        perror("open");
+        exit(1);
+    }
+    struct stat info;
+    if(fstat(fd, &info) != 0)
+        return null;
+
+    char buff[info.st_size+1];
+    SQTree* res = sjs_parseString((char*)&buff);
+    close(fd);
+    if(files == null)
+        files = svect_create();
+    struct _sjs_loadedData*jsonData = (struct _sjs_loadedData*)malloc(16);
+    jsonData->file = file;
+    jsonData->json_data = res;
+    svect_insert(files, file);
+    atexit(sjs_closeFile);
+}
+
+void sjs_closeFile(void)
+{
+    struct _sjs_loadedData*data = (struct _sjs_loadedData*)svect_popl(files);
+    int fd = open(data->file, O_WRONLY);
+    if (fd == -1)
+    {
+        perror("open");
+        exit(1);
+    }
+    SString*json_data = sjs_toString(data->json_data);
+    write(fd, json_data->s_str, json_data->s_size);
+    if (ftruncate(fd, json_data->s_size) == 1)
+    {
+        perror("ftruncate");
+        exit(1);
+    }
+    close(fd);
+}
+
+void sjs_insertPair(SQTree* json, char* key, JsonValueType value)
+{
+    sstr_createeOnStack(key_str);
+
+    sstr_appendcs(key_str, key);
+
+    switch(value.type)
+    {
+        case _SJS_STRING:
+            sstr_createeOnStack(value_str);
+            sstr_appendc(value_str, _SJS_STRING);
+            sstr_appendcs(value_str, value.value._string);
+            sstr_serialize(key_str);
+            sqtr_setNoCopy(json, key_str->s_str, value_str->s_str);
+            break;
+    }
+}
+
 STATIC_I char *_sjs_parsePair(char *p, SQTree *json)
 {
     for (; *p == ' ' || *p == ',' || *p == '"' || *p == '\n' || *p == '}' || *p == '{'; ++p)
@@ -325,4 +392,41 @@ char *_sjs_toCString(SQTree *json, int padding)
     }
     sstr_appendcs(ret, "}");
     return sstr_serialize(ret);
+}
+
+int sjs_appendElement(char *file, char *element, unsigned int size)
+{
+    int fd = open(file, O_RDWR);
+    if (fd == 0)
+        perror("open");
+    struct stat info;
+    if (fstat(fd, &info) != 0)
+        perror("fstat");
+    int pos = info.st_size;
+find_pos:
+    if (pos > 10)
+    {
+        char buff[11];
+        lseek(fd, pos - 10, SEEK_SET);
+        read(fd, &buff, 10);
+        buff[10] = '\00';
+        for (char *_buff = ((char *)&buff) + 11; *_buff != '}'; _buff--, pos--)
+            if (_buff == (char *)&buff)
+                goto find_pos;
+        lseek(fd, pos, SEEK_SET);
+        convert_dprintf(fd, "\n  ,%x\n}", element, size);
+    }
+    else
+    {
+        char buff[info.st_size + 1];
+        lseek(fd, 0, SEEK_SET);
+        read(fd, &buff, info.st_size);
+        buff[info.st_size] = '\00';
+        for (char *_buff = ((char *)&buff) + info.st_size; *_buff != '}'; _buff--, pos--)
+            if (_buff == (char *)&buff)
+                return -1;
+        lseek(fd, pos, SEEK_SET);
+        convert_dprintf(fd, "  %x\n}", element, size);
+    }
+    close(fd);
 }

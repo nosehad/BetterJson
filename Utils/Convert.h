@@ -47,7 +47,9 @@
     double convert_CStrToDouble(char* cstr);
     int convert_FloatToCStr(float f, char* dest);
     int convert_DoubleToCStr(double d, char* dest);
-    #ifdef __cplusplus
+    void convert_printf(char *format, ...);
+    void convert_dprintf(int fd, char *format, ...);
+#ifdef __cplusplus
         }
     #endif
 #endif
