@@ -44,7 +44,7 @@ int convert_LongToCStr(long long l, char *dest)
 {
     char *b = (char *)__builtin_alloca(MAX_LENGTH_INT);
     char *a = b;
-    char n;
+    char n = 0;
 
     /* check for special cases */
     if (l < 0) /* number negative */
@@ -64,7 +64,7 @@ int convert_LongToCStr(long long l, char *dest)
     if (n)
         extend_string(b, '-')
 
-            int size = b - a;
+    int size = b - a;
     /* reverse copy converted int to final string */
     for (--b; b >= a; --b, dest++)
         *dest = *b;

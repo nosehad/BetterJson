@@ -63,7 +63,8 @@ EXTERN_I char* svect_popl(SVector *vector)
 
 EXTERN_I void svect_set(SVector* vector, unsigned int i, char* value)
 {
-    *(vector->vect+i) = value;
+    free(*(vector->vect + i));
+    *(vector->vect + i) = value;
 }
 
 EXTERN_I char* svect_get(SVector* vector, unsigned int index)

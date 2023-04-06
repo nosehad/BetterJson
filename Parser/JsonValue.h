@@ -11,7 +11,10 @@
         _SJS_NUM = 3,
         _SJS_NULL = 4,
         _SJS_STRING = 5,
-        _SJS_BOOL = 6
+        _SJS_BOOL = 6,
+        _SJS_EXTENDED_INT = 7,
+        _SJS_EXTENDED_LONG = 8,
+        _SJS_EXTENDED_DOUBLE = 9
     };
 
     typedef union _sjs_jsonValue JsonValue;
@@ -33,39 +36,10 @@
         int type;
     };
 
-    struct sjs_jsonValueType sjs_createValueDouble(double value)
-    {
-        struct sjs_jsonValueType type;
-        type.type = _SJS_NUM;
-        type.value._double = value;
-    }
-
-    struct sjs_jsonValueType sjs_createValueString(char* value)
-    {
-        struct sjs_jsonValueType type;
-        type.type = _SJS_NUM;
-        type.value._string = value;
-    }
-
-    struct sjs_jsonValueType sjs_createValueInt(int value)
-    {
-        struct sjs_jsonValueType type;
-        type.type = _SJS_NUM;
-        type.value._int = value;
-    }
-
-    struct sjs_jsonValueType sjs_createValueLong(long long value)
-    {
-        struct sjs_jsonValueType type;
-        type.type = _SJS_NUM;
-        type.value._long = value;
-    }
-
-    struct sjs_jsonValueType sjs_createValueBool(char value)
-    {
-        struct sjs_jsonValueType type;
-        type.type = _SJS_NUM;
-        type.value._bool = value;
-    }
+    extern inline JsonValueType sjs_createValueDouble(double value);
+    extern inline JsonValueType sjs_createValueString(char* value);
+    extern inline JsonValueType sjs_createValueInt(int value);
+    extern inline JsonValueType sjs_createValueLong(long long value);
+    extern inline JsonValueType sjs_createValueBool(char value);
 
 #endif

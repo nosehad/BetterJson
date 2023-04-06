@@ -66,6 +66,7 @@ void sqtr_setNoCopy(SQTree* tree, char* key, char* value)
     {
         if(tree->key != null && sqtr_keyeqval(tree->key, _key) == 1)
         {
+            free(tree->value);free(key);
             tree->value = value;
             return;
         }
@@ -117,6 +118,7 @@ void sqtr_set(SQTree* tree, char* key, char* value)
     {
         if(tree->key != null && sqtr_keyeqval(tree->key, _key) == 1)
         {
+            free(tree->value);
             tree->value = sstr_serialize(value_string);
             return;
         }
@@ -167,7 +169,6 @@ void* sqtr_get(SQTree* tree, char* key)
     unsigned char shifting_bits = 0;
     for(;*key != 0; shifting_bits++)
     {
-        printf("%s != %s", tree->key, key);
         if(tree->key != null && strcmp(tree->key, _key) == 0)
         {
             return tree->value;
