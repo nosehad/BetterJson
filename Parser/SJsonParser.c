@@ -21,6 +21,8 @@ STATIC_I void _sjs_setKey(SString *str, char *key, char *val, int padding)
     }
     else
         sstr_appendcs(str, val + 1);
+    free(key);
+    free(val);
 }
 
 STATIC_I char *_sjs_parseOpen(char *p)
@@ -33,56 +35,46 @@ STATIC_I char *_sjs_parseOpen(char *p)
     return p;
 }
 
-struct _sjs_loadedData {
-    char* file;
-    SQTree* json_data;
-};
-
-SVector *files;
-SQTree* sjs_loadFile(char* file)
+SQTree *sjs_loadFile(char *file)
 {
     int fd = open(file, O_RDONLY);
     if (fd == -1)
     {
         perror("open");
-        exit(1);
+        return null;
     }
     struct stat info;
-    if(fstat(fd, &info) != 0)
+    if (fstat(fd, &info) != 0)
+    {
+        perror("fstat");
         return null;
-
-    char buff[info.st_size+1];
-    SQTree* res = sjs_parseString((char*)&buff);
-    close(fd);
-    if(files == null)
-        files = svect_create();
-    struct _sjs_loadedData*jsonData = (struct _sjs_loadedData*)malloc(16);
-    jsonData->file = file;
-    jsonData->json_data = res;
-    svect_insert(files, file);
-    atexit(sjs_closeFile);
+    }
+    char buff[info.st_size + 1];
+    read(fd, &buff, info.st_size);
+    buff[info.st_size] = '\00';
+    return sjs_parseString((char *)&buff);
 }
 
-void sjs_closeFile(void)
+void sjs_save(SQTree* json, char* file)
 {
-    struct _sjs_loadedData*data = (struct _sjs_loadedData*)svect_popl(files);
-    int fd = open(data->file, O_WRONLY);
-    if (fd == -1)
+    FILE* f = fopen(file, "w");
+    if (f == -1)
     {
         perror("open");
         exit(1);
     }
-    SString*json_data = sjs_toString(data->json_data);
-    write(fd, json_data->s_str, json_data->s_size);
-    if (ftruncate(fd, json_data->s_size) == 1)
+    SString*json_data = sjs_toString(json);
+    write(f->_fileno, json_data->s_str, json_data->s_size);
+    if (ftruncate(f->_fileno, json_data->s_size) == 1)
     {
         perror("ftruncate");
         exit(1);
     }
-    close(fd);
+    sstr_delete(json_data);
+    fclose(f);
 }
 
-void sjs_insertPair(SQTree* json, char* key, JsonValueType value)
+void sjs_setPair(SQTree* json, char* key, JsonValueType value)
 {
     sstr_createeOnStack(key_str);
 
@@ -91,12 +83,80 @@ void sjs_insertPair(SQTree* json, char* key, JsonValueType value)
     switch(value.type)
     {
         case _SJS_STRING:
+        {
+            if(value.value._string == null)
+            {
+                char* value_str = (char *)malloc(7);
+                _sjs_copy(value_str + 1, "null", "null" + 3);
+                *(value_str + 5) = '\00';
+                *value_str = _SJS_NULL;
+                sqtr_setNoCopy(json, key_str->s_str, value_str);
+                break;
+            }
             sstr_createeOnStack(value_str);
             sstr_appendc(value_str, _SJS_STRING);
             sstr_appendcs(value_str, value.value._string);
             sstr_serialize(key_str);
+            sstr_serialize(value_str);
             sqtr_setNoCopy(json, key_str->s_str, value_str->s_str);
             break;
+        }
+        case _SJS_EXTENDED_INT:
+        {
+            char* value_str = (char*) malloc(MAX_LENGTH_INT+2);
+            *value_str = _SJS_NUM;
+            sstr_serialize(key_str);
+            *(value_str + convert_IntToCStr(value.value._int, value_str + 1)+1) = '\00';
+            sqtr_setNoCopy(json, key_str->s_str, value_str);
+            break;
+        }
+        case _SJS_EXTENDED_LONG:
+        {
+            char *value_str = (char *)malloc(MAX_LENGTH_LONG + 2);
+            *value_str = _SJS_NUM;
+            sstr_serialize(key_str);
+            *(value_str + convert_LongToCStr(value.value._long, value_str + 1)+1) = '\00';
+            sqtr_setNoCopy(json, key_str->s_str, value_str);
+            break;
+        }
+        case _SJS_EXTENDED_DOUBLE:
+        {
+            char *value_str = (char *)malloc(MAX_LENGTH_FLOAT + 2);
+            *value_str = _SJS_NUM;
+            sstr_serialize(key_str);
+            *(value_str + convert_DoubleToCStr(value.value._double, value_str + 1)+1) = '\00';
+            sqtr_setNoCopy(json, key_str->s_str, value_str);
+            break;
+        }
+        case _SJS_BOOL:
+        {
+            char *value_str;
+            if (value.value._bool == 0)
+            {
+                value_str = (char *)malloc(7);
+                _sjs_copy(value_str+1, "false", "false"+4);
+                *(value_str + 6) = '\00';
+            }
+            else 
+            {
+                value_str = (char *)malloc(7);
+                _sjs_copy(value_str + 1, "true", "true" + 3);
+                *(value_str + 5) = '\00';
+            }
+            *value_str = _SJS_BOOL;
+            sqtr_setNoCopy(json, key_str->s_str, value_str);
+            break;
+        }
+        case _SJS_ARRAY:
+        {
+            sqtr_setNoCopy(json, key_str->s_str, sjs_arr_toCString(value.value._jsonArray));
+            break;
+        }
+        case _SJS_JSON:
+        {
+            sqtr_setNoCopy(json, key_str->s_str, sjs_toCString(value.value._jsonArray));
+            break;
+        }
     }
 }
 
@@ -114,7 +174,7 @@ STATIC_I char *_sjs_parsePair(char *p, SQTree *json)
     char *_end = (p++) - 1;
 
     /* create key */
-    char *key = (char *)malloc((_end - _start) + 1);
+    char *key = (char *)malloc((_end - _start) + 2);
     _sjs_copy(key, _start, _end);
 
     /* get value */
@@ -204,7 +264,7 @@ STATIC_I char *_sjs_parsePair(char *p, SQTree *json)
     }
 
     /* create value */
-    char *value = (char *)malloc((_end - _start) + 2 /* +2 to add type and \00 footer */);
+    char *value = (char *)malloc((_end - _start) + 3 /* +2 to add type and \00 footer */);
     /* set value type */
     *value = type;
     _sjs_copy(value + 1, _start, _end);
@@ -212,8 +272,7 @@ STATIC_I char *_sjs_parsePair(char *p, SQTree *json)
     /* insert value to tree */
     sqtr_setNoCopy(json, key, value);
     /* increase p until row is over */
-    for (; *p != ',' && *p != '}' && *p != 0; ++p)
-        ;
+    for (; *p != ',' && *p != '}' && *p != 0; ++p);
     return p; /* return current state of p*/
 }
 
@@ -228,6 +287,7 @@ EXTERN_I JsonValue sjs_getValue(SQTree *json, char *key)
         value._string = null;
         return value;
     }
+    printf("%d\n",convert_getType(result));
     switch (*(result++))
     {
     case _SJS_NUM:
@@ -332,66 +392,79 @@ SQTree *sjs_parseString(char *str)
     SQTree *json = sqtr_create();
     str = _sjs_parseOpen(str);
     for (; *str != null; ++str)
-    {
         str = _sjs_parsePair(str, json);
-    }
     return json;
 }
 
-SString *_sjs_toString(SQTree *json, int padding)
+SString *sjs_toString(SQTree *json)
 {
-    SString *ret = sstr_createe();
-    if (sqtr_empty(json) == 1)
-    {
-        sstr_appendcs(ret, "{}");
-        return ret;
+    SString* res = sstr_createe();
+    if (sqtr_empty(json))
+    {   
+        sstr_appends(res, "{}", 2);
+        return res;
     }
-    sstr_appendcs(ret, "{\n");
-    for (SQNode *current = sqtr_popl(json);;)
+    sstr_appendc(res, '{');
+    for (SQNode *node = sqtr_popl(json);; node = sqtr_popl(json))
     {
-        if (sqtr_empty(json))
+        sstr_appendc(res, '\"');
+        sstr_appendcs(res, node->key);
+        sstr_appendcs(res, "\":");
+        if (*node->value == _SJS_STRING)
         {
-            _sjs_setKey(ret, current->key, current->value, padding);
-            sstr_appendc(ret, '\n');
-            break;
+            sstr_appendc(res, '\"');
+            sstr_appendcs(res, node->value + 1);
+            sstr_appendc(res, '\"');
         }
         else
-        {
-            _sjs_setKey(ret, current->key, current->value, padding);
-            sstr_appendcs(ret, ",\n");
-        }
-        current = sqtr_popl(json);
+            sstr_appendcs(res, node->value + 1);
+        free(node->key);
+        free(node->value);
+        free(node);
+        if (sqtr_empty(json))
+            break;
+        else
+            sstr_appendc(res, ',');
     }
-    sstr_appendcs(ret, "}");
-    return ret;
+    sstr_appendc(res, '}');
+    free(json);
+    return res;
 }
 
-char *_sjs_toCString(SQTree *json, int padding)
+char *sjs_toCString(SQTree *json)
 {
-    sstr_createeOnStack(ret);
-    if (sqtr_empty(json) == 1)
+    sstr_createeOnStack(res);
+    sstr_appendc(res, _SJS_JSON);
+    if (sqtr_empty(json))
     {
-        sstr_appendcs(ret, "{}");
-        return sstr_serialize(ret);
+        sstr_appends(res, "{}", 2);
+        return sstr_serialize(res);
     }
-    sstr_appendcs(ret, "{\n");
-    for (SQNode *current = sqtr_popl(json);;)
+    sstr_appendc(res, '{');
+    for (SQNode *node = sqtr_popl(json);; node = sqtr_popl(json))
     {
-        if (sqtr_empty(json))
+        sstr_appendc(res, '\"');
+        sstr_appendcs(res, node->key);
+        sstr_appendcs(res, "\":");
+        if (*node->value == _SJS_STRING)
         {
-            _sjs_setKey(ret, current->key, current->value, padding);
-            sstr_appendc(ret, '\n');
-            break;
+            sstr_appendc(res, '\"');
+            sstr_appendcs(res, node->value + 1);
+            sstr_appendc(res, '\"');
         }
         else
-        {
-            _sjs_setKey(ret, current->key, current->value, padding);
-            sstr_appendcs(ret, ",\n");
-        }
-        current = sqtr_popl(json);
+            sstr_appendcs(res, node->value + 1);
+        free(node->key);
+        free(node->value);
+        free(node);
+        if (sqtr_empty(json))
+            break;
+        else
+            sstr_appendc(res, ',');
     }
-    sstr_appendcs(ret, "}");
-    return sstr_serialize(ret);
+    sstr_appendc(res, '}');
+    free(json);
+    return sstr_serialize(res);
 }
 
 int sjs_appendElement(char *file, char *element, unsigned int size)

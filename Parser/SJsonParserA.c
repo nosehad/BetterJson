@@ -2,9 +2,28 @@
 
 STATIC_I char *_sjs_arr_getopen(char *str)
 {
-    for (; *str != '[' && *str != 0; ++str)
-        ;
+    for (; *str != '[' && *str != 0; ++str);
     return str + 1;
+}
+
+SQTree *sjs_arr_loadFile(char *file)
+{
+    int fd = open(file, O_RDONLY);
+    if (fd == -1)
+    {
+        perror("open");
+        return null;
+    }
+    struct stat info;
+    if (fstat(fd, &info) != 0)
+    {
+        perror("fstat");
+        return null;
+    }
+    char buff[info.st_size + 1];
+    read(fd, &buff, info.st_size);
+    buff[info.st_size] = '\00';
+    return sjs_arr_parseString((char *)&buff);
 }
 
 SVector *sjs_arr_parseString(char *str)
@@ -17,6 +36,154 @@ SVector *sjs_arr_parseString(char *str)
         if (*str != ' ' && *str != '\n' && *str != ',')
             str = _sjs_arr_getitem(str, vect);
     return vect;
+}
+
+void sjs_arr_setValue(SVector *array, unsigned int index, JsonValueType value)
+{
+    if(index > array->size)
+        return;
+    switch (value.type)
+    {
+    case _SJS_STRING:
+    {
+        if (value.value._string == null)
+        {
+            char *value_str = (char *)malloc(7);
+            _sjs_copy(value_str + 1, "null", "null" + 3);
+            *(value_str + 5) = '\00';
+            *value_str = _SJS_NULL;
+            svect_set(array, index, value_str);
+            break;
+        }
+        sstr_createeOnStack(value_str);
+        sstr_appendc(value_str, _SJS_STRING);
+        sstr_appendcs(value_str, value.value._string);
+        sstr_serialize(value_str);
+        svect_set(array, index, value_str->s_str);
+        break;
+    }
+    case _SJS_EXTENDED_INT:
+    {
+        char *value_str = (char *)malloc(MAX_LENGTH_INT + 2);
+        *value_str = _SJS_NUM;
+        *(value_str + convert_IntToCStr(value.value._int, value_str + 1) + 1) = '\00';
+        svect_set(array, index, value_str);
+        break;
+    }
+    case _SJS_EXTENDED_LONG:
+    {
+        char *value_str = (char *)malloc(MAX_LENGTH_LONG + 2);
+        *value_str = _SJS_NUM;
+        *(value_str + convert_LongToCStr(value.value._long, value_str + 1) + 1) = '\00';
+        svect_set(array, index, value_str);
+        break;
+    }
+    case _SJS_EXTENDED_DOUBLE:
+    {
+        char *value_str = (char *)malloc(MAX_LENGTH_FLOAT + 2);
+        *value_str = _SJS_NUM;
+        *(value_str + convert_DoubleToCStr(value.value._double, value_str + 1) + 1) = '\00';
+        svect_set(array, index, value_str);
+        break;
+    }
+    case _SJS_BOOL:
+    {
+        char *value_str;
+        if (value.value._bool == 0)
+        {
+            value_str = (char *)malloc(7);
+            _sjs_copy(value_str + 1, "false", "false" + 4);
+            *(value_str + 6) = '\00';
+        }
+        else
+        {
+            value_str = (char *)malloc(7);
+            _sjs_copy(value_str + 1, "true", "true" + 3);
+            *(value_str + 5) = '\00';
+        }
+        *value_str = _SJS_BOOL;
+        svect_set(array, index, value_str);
+        break;
+    }
+    case _SJS_JSON:
+    {
+        svect_set(array, index, sjs_toCString(value.value._jsonArray));
+        break;
+    }
+    }
+}
+
+void sjs_arr_appendValue(SVector *array, JsonValueType value)
+{
+    switch (value.type)
+    {
+    case _SJS_STRING:
+    {
+        if (value.value._string == null)
+        {
+            char *value_str = (char *)malloc(7);
+            _sjs_copy(value_str + 1, "null", "null" + 3);
+            *(value_str + 5) = '\00';
+            *value_str = _SJS_NULL;
+            svect_insertNoCopy(array, value_str);
+            break;
+        }
+        sstr_createeOnStack(value_str);
+        sstr_appendc(value_str, _SJS_STRING);
+        sstr_appendcs(value_str, value.value._string);
+        sstr_serialize(value_str);
+        svect_insertNoCopy(array, value_str->s_str);
+        break;
+    }
+    case _SJS_EXTENDED_INT:
+    {
+        char *value_str = (char *)malloc(MAX_LENGTH_INT + 2);
+        *value_str = _SJS_NUM;
+        *(value_str + convert_IntToCStr(value.value._int, value_str + 1) + 1) = '\00';
+        svect_insertNoCopy(array, value_str);
+        break;
+    }
+    case _SJS_EXTENDED_LONG:
+    {
+        char *value_str = (char *)malloc(MAX_LENGTH_LONG + 2);
+        *value_str = _SJS_NUM;
+        *(value_str + convert_LongToCStr(value.value._long, value_str + 1) + 1) = '\00';
+        svect_insertNoCopy(array, value_str);
+        break;
+    }
+    case _SJS_EXTENDED_DOUBLE:
+    {
+        char *value_str = (char *)malloc(MAX_LENGTH_FLOAT + 2);
+        *value_str = _SJS_NUM;
+        *(value_str + convert_DoubleToCStr(value.value._double, value_str + 1) + 1) = '\00';
+        svect_insertNoCopy(array, value_str);
+        break;
+    }
+    case _SJS_BOOL:
+    {
+        char *value_str;
+        if (value.value._bool == 0)
+        {
+            value_str = (char *)malloc(7);
+            _sjs_copy(value_str + 1, "false", "false" + 4);
+            *(value_str + 6) = '\00';
+        }
+        else
+        {
+            value_str = (char *)malloc(7);
+            _sjs_copy(value_str + 1, "true", "true" + 3);
+            *(value_str + 5) = '\00';
+        }
+        *value_str = _SJS_BOOL;
+        svect_insertNoCopy(array, value_str);
+        break;
+    }
+    case _SJS_JSON:
+    {
+        svect_insertNoCopy(array, sjs_toCString(value.value._jsonArray));
+        break;
+    }
+    }
 }
 
 STATIC_I char *_sjs_arr_getitem(char *p, SVector *vect)
@@ -219,12 +386,30 @@ EXTERN_I JsonValueType sjs_arr_getValueAndType(SVector *arr, unsigned int index)
     }
 }
 
-SString *_sjs_arr_toString(SVector *arr, int init_padding)
+void sjs_arr_save(SVector *array, char *file)
 {
-    SString *str = sstr_createcs("[\n");
+    FILE *f = fopen(file, "w");
+    if (f == -1)
+    {
+        perror("open");
+        exit(1);
+    }
+    SString *json_data = sjs_arr_toString(array);
+    write(f->_fileno, json_data->s_str, json_data->s_size);
+    if (ftruncate(f->_fileno, json_data->s_size) == 1)
+    {
+        perror("ftruncate");
+        exit(1);
+    }
+    sstr_delete(json_data);
+    fclose(f);
+}
+
+SString *sjs_arr_toString(SVector *arr)
+{
+    SString* str = sstr_creates("[",1);
     for (unsigned int i = 0; i < arr->size; ++i)
     {
-        sstr_fill(str, ' ', init_padding);
         char *val = svect_get(arr, i);
         if (*val == _SJS_STRING)
         {
@@ -234,23 +419,22 @@ SString *_sjs_arr_toString(SVector *arr, int init_padding)
         }
         else
             sstr_appendcs(str, val + 1);
-        if (i == (arr->size - 1))
-            sstr_appendc(str, '\n');
-        else
-            sstr_appendcs(str, ",\n");
+        if (i < (arr->size - 1))
+            sstr_appendcs(str, ",");
+        free(val);
     }
-    sstr_fill(str, ' ', init_padding - 1);
     sstr_appendc(str, ']');
-    svect_delete(arr);
+    free(arr->vect);
+    free(arr);
     return str;
 }
 
-char *_sjs_arr_toCString(SVector *arr, int init_padding)
+char *sjs_arr_toCString(SVector *arr)
 {
     sstr_createsOnStack(str, "[\n", 2);
+    sstr_appendc(str, _SJS_ARRAY);
     for (unsigned int i = 0; i < arr->size; ++i)
     {
-        sstr_fill(str, ' ', init_padding);
         char *val = svect_get(arr, i);
         if (*val == _SJS_STRING)
         {
@@ -264,10 +448,11 @@ char *_sjs_arr_toCString(SVector *arr, int init_padding)
             sstr_appendc(str, '\n');
         else
             sstr_appendcs(str, ",\n");
+        free(val);
     }
-    sstr_fill(str, ' ', init_padding - 1);
     sstr_appendc(str, ']');
-    svect_delete(arr);
+    free(arr->vect);
+    free(arr);
     return sstr_serialize(str);
 }
 

@@ -26,7 +26,7 @@
     /* allocate sstring struct on stack */
     #define sstr_createeOnStack(name) \
     SString* name = (SString*)__builtin_alloca(sizeof(SString)); \
-    name->s_capacity = 2; \
+    name->s_capacity = 8; \
     name->s_size = 0; \
     name->s_str = (char*) malloc(name->s_capacity);
 

@@ -106,9 +106,8 @@ EXTERN_I void sstr_appendc(SString* str, char ch)
 
 void sstr_appendcs(struct _sstring* base, char* str)
 {
-    char* ch;
-    for(ch = str;*ch != null;ch++)
-       sstr_appendc(base, *ch);
+    for(;*str != null;str++)
+       sstr_appendc(base, *str);
 }
 
 void sstr_appends(SString* base, char* str, unsigned int size)
