@@ -7,6 +7,7 @@
 
     #include <stdio.h>
     #include <stdlib.h>
+    #include <unistd.h>
 
     #include "../Storage/SVector.h"
     #include "../Utils/Convert.h"
@@ -24,6 +25,7 @@
     EXTERN_I JsonValueType sjs_arr_getValueAndType(SVector*arr, unsigned int index);
     SString *_sjs_arr_toString(SVector *arr, int init_padding);
     char *_sjs_arr_toCString(SVector *arr, int init_padding);
+    int sjs_arr_appendElement(char *file, char *element, unsigned int size);
 
     #define sjs_arr_toString(json) _sjs_arr_toString(json, 2)
     #define sjs_arr_toCString(json) _sjs_arr_toCString(json, 2)
