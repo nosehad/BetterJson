@@ -47,3 +47,11 @@ inline JsonValueType sjs_createValueArray(SVector* value)
     type.value._jsonArray = value;
     return type;
 }
+
+inline JsonValueType sjs_createValueJson(SQTree *value)
+{
+    JsonValueType type;
+    type.type = _SJS_JSON;
+    type.value._jsonArray = value;
+    return type;
+}

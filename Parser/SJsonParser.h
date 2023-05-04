@@ -13,15 +13,16 @@ extern "C"
     #include "../Utils/Convert.h"
     #include "../Storage/SQTree.h"
 
+    #define sjs_createEmptyData() sqtr_create()
+
     /* is also used in array parser*/
     SQTree *sjs_loadFile(char *file);
     void sjs_save(SQTree* json, char* file);
     void sjs_setPair(SQTree *json, char *key, JsonValueType value);
-    void sjs_closeFile(void);
-    EXTERN_I void _sjs_copy(char *dest, char *start, char *end);
+    extern inline void _sjs_copy(char *dest, char *start, char *end);
     SQTree *sjs_parseString(char *str);
-    EXTERN_I JsonValue sjs_getValue(SQTree *json, char *key);
-    EXTERN_I JsonValueType sjs_getValueAndType(SQTree *json, char *key);
+    extern inline JsonValue sjs_getValue(SQTree *json, char *key);
+    extern inline JsonValueType sjs_getValueAndType(SQTree *json, char *key);
     SString *sjs_toString(SQTree *json);
     char *sjs_toCString(SQTree *json);
     int sjs_appendElement(char *file, char *element, unsigned int size);

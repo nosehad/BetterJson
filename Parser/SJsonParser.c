@@ -1,12 +1,12 @@
 #include "SJsonParser.h"
 
-EXTERN_I void _sjs_copy(char *dest, char *start, char *end)
+inline void _sjs_copy(char *dest, char *start, char *end)
 {
     for (; start <= end; ++start, ++dest)
         *dest = *start;
 }
 
-STATIC_I void _sjs_setKey(SString *str, char *key, char *val, int padding)
+static inline void _sjs_setKey(SString *str, char *key, char *val, int padding)
 {
     for (; padding > 0; padding--)
         sstr_appendc(str, ' ');
@@ -25,7 +25,7 @@ STATIC_I void _sjs_setKey(SString *str, char *key, char *val, int padding)
     free(val);
 }
 
-STATIC_I char *_sjs_parseOpen(char *p)
+static inline char *_sjs_parseOpen(char *p)
 {
     for (; *p != null; ++p)
     {
@@ -152,15 +152,10 @@ void sjs_setPair(SQTree* json, char* key, JsonValueType value)
             sqtr_setNoCopy(json, key_str->s_str, sjs_arr_toCString(value.value._jsonArray));
             break;
         }
-        case _SJS_JSON:
-        {
-            sqtr_setNoCopy(json, key_str->s_str, sjs_toCString(value.value._jsonArray));
-            break;
-        }
     }
 }
 
-STATIC_I char *_sjs_parsePair(char *p, SQTree *json)
+static inline char *_sjs_parsePair(char *p, SQTree *json)
 {
     for (; *p == ' ' || *p == ',' || *p == '"' || *p == '\n' || *p == '}' || *p == '{'; ++p)
         if (*p == 0)
@@ -277,7 +272,7 @@ STATIC_I char *_sjs_parsePair(char *p, SQTree *json)
 }
 
 /* get functions */
-EXTERN_I JsonValue sjs_getValue(SQTree *json, char *key)
+inline JsonValue sjs_getValue(SQTree *json, char *key)
 {
     char *result = (char *)sqtr_get(json, key);
     JsonValue value;
@@ -328,7 +323,7 @@ EXTERN_I JsonValue sjs_getValue(SQTree *json, char *key)
     }
 }
 
-EXTERN_I JsonValueType sjs_getValueAndType(SQTree *json, char *key)
+inline JsonValueType sjs_getValueAndType(SQTree *json, char *key)
 {
     char *result = (char *)sqtr_get(json, key);
     JsonValueType type;

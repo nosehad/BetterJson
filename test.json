@@ -1,5 +1,1 @@
-{
-  "name": "Bob",
-  "age": 40,
-  "city": "Chicago"
-}
+["dog", 5, "bird", 2.5, "flies", 29999999934341]

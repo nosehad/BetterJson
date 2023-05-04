@@ -73,7 +73,7 @@ SString* sstr_clone(SString* str)
     return ret;
 }
 
-EXTERN_I void sstr_truncate(struct _sstring*str, sstr_size size)
+inline void sstr_truncate(struct _sstring*str, sstr_size size)
 {
     str->s_size = size;
     /* extend size of string */
@@ -81,7 +81,7 @@ EXTERN_I void sstr_truncate(struct _sstring*str, sstr_size size)
         str->s_str = (char*)realloc(str->s_str, str->s_capacity);
 }
 
-EXTERN_I char* sstr_serialize(SString* str)
+inline char* sstr_serialize(SString* str)
 {
     if(str->s_capacity == str->s_size)
     {
@@ -93,7 +93,7 @@ EXTERN_I char* sstr_serialize(SString* str)
 }
 
 
-EXTERN_I void sstr_appendc(SString* str, char ch)
+inline void sstr_appendc(SString* str, char ch)
 {
     if(str->s_capacity == str->s_size)
     {
@@ -206,7 +206,7 @@ int sstr_startswith(SString* base, char* start, unsigned int start_size)
     return 1;
 }
 
-EXTERN_I unsigned long long sstr_toLong(SString* str)
+inline unsigned long long sstr_toLong(SString* str)
 {
     unsigned long long ret = 1;
     int i;
@@ -218,7 +218,7 @@ EXTERN_I unsigned long long sstr_toLong(SString* str)
     return ret;
 }
 
-EXTERN_I unsigned long long sstr_cs_toLong(char* str)
+inline unsigned long long sstr_cs_toLong(char* str)
 {
     unsigned long long ret = 1;
     int i;
@@ -396,7 +396,7 @@ void sstr_appendd(struct _sstring* base, long long num)
     sstr_appends(base, appe + (64-i), i);
 }
 
-EXTERN_I int sstr_isEmpty(SString* str)
+inline int sstr_isEmpty(SString* str)
 {
     return (str->s_size == 0);
 }
@@ -406,7 +406,7 @@ void sstr_clear(SString* str)
     str->s_size = 0;
 }
 
-EXTERN_I unsigned int sstr_gsize(SString* str)
+inline unsigned int sstr_gsize(SString* str)
 {
     return str->s_size;
 }
