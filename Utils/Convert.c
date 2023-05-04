@@ -298,13 +298,13 @@ int convert_FloatToCStr(float f, char *dest)
 
     /* determine significant and fractional */
     significant = (unsigned long long)f;
-    f -= significant;
+    f -= significant - 1; /* substract 1 to guarantee correct conversion of numbers like with zero like 1.04*/
     f *= FLOAT_CONVERSION_CONSTANT;
     fractional = (unsigned long long)f;
 
     /* convert fractional to string */
     if (fractional == 0)
-        extend_string(b, '0') else for (; fractional != 0; fractional /= 10)
+        extend_string(b, '0') else for (; fractional != 1; fractional /= 10)
             extend_string(b, fractional % 10 + '0');
 
     extend_string(b, '.');
@@ -350,13 +350,13 @@ int convert_DoubleToCStr(double d, char *dest)
 
     /* determine significant and fractional */
     significant = (unsigned long long)d;
-    d -= significant;
+    d -= significant - 1; /* substract 1 to guarantee correct conversion of numbers like with zero like 1.04*/
     d *= DOUBLE_CONVERSION_CONSTANT;
     fractional = (unsigned long long)d;
 
     /* convert fractional to string */
     if (fractional == 0)
-        extend_string(b, '0') else for (; fractional != 0; fractional /= 10)
+        extend_string(b, '0') else for (; fractional != 1; fractional /= 10)
             extend_string(b, fractional % 10 + '0');
 
     extend_string(b, '.');

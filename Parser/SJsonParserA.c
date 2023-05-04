@@ -1,6 +1,6 @@
 #include "SJsonParserA.h"
 
-STATIC_I char *_sjs_arr_getopen(char *str)
+static inline char *_sjs_arr_getopen(char *str)
 {
     for (; *str != '[' && *str != 0; ++str);
     return str + 1;
@@ -110,6 +110,11 @@ void sjs_arr_setValue(SVector *array, unsigned int index, JsonValueType value)
         svect_set(array, index, sjs_toCString(value.value._jsonArray));
         break;
     }
+    case _SJS_ARRAY:
+    {
+        svect_set(array, index, sjs_arr_toCString(value.value._jsonArray));
+        break;
+    }
     }
 }
 
@@ -186,7 +191,7 @@ void sjs_arr_appendValue(SVector *array, JsonValueType value)
     }
 }
 
-STATIC_I char *_sjs_arr_getitem(char *p, SVector *vect)
+static inline char *_sjs_arr_getitem(char *p, SVector *vect)
 {
     char *_start;
     char *_end;
@@ -285,7 +290,7 @@ STATIC_I char *_sjs_arr_getitem(char *p, SVector *vect)
 }
 
 /* get functions */
-EXTERN_I JsonValue sjs_arr_getValue(SVector *arr, unsigned int index)
+inline JsonValue sjs_arr_getValue(SVector *arr, unsigned int index)
 {
     char *result = svect_get(arr, index);
     JsonValue value;
@@ -331,7 +336,7 @@ EXTERN_I JsonValue sjs_arr_getValue(SVector *arr, unsigned int index)
     }
 }
 
-EXTERN_I JsonValueType sjs_arr_getValueAndType(SVector *arr, unsigned int index)
+inline JsonValueType sjs_arr_getValueAndType(SVector *arr, unsigned int index)
 {
     char *result = svect_get(arr, index);
     JsonValueType type;

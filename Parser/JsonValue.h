@@ -41,5 +41,7 @@
     extern inline JsonValueType sjs_createValueInt(int value);
     extern inline JsonValueType sjs_createValueLong(long long value);
     extern inline JsonValueType sjs_createValueBool(char value);
+    extern inline JsonValueType sjs_createValueJson(SQTree* value);
+    extern inline JsonValueType sjs_createValueArray(SVector* value);
 
 #endif

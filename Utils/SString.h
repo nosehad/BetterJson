@@ -47,9 +47,9 @@
     // create string by files 
     struct _sstring* sstr_createff(char* path);
     struct _sstring* sstr_clone(struct _sstring* str);
-    EXTERN_I char* sstr_serialize(SString* str);
+    extern inline char* sstr_serialize(SString* str);
     // appends char to string
-    EXTERN_I void sstr_appendc(struct _sstring* base, char ch);
+    extern inline void sstr_appendc(struct _sstring* base, char ch);
     // appends C string to SString
     void sstr_appends(struct _sstring* base, char* str, unsigned int size);
     // appends C string without given size to SString, last char of str has to be \0
@@ -67,8 +67,8 @@
     int sstr_startswith(SString* base, char* start, unsigned int start_size);
     void sstr_delete(SString* sstr);
     // converts string to long, is relevant for search algorithms
-    EXTERN_I unsigned long long sstr_toLong(SString* str);
-    EXTERN_I unsigned long long sstr_cs_toLong(char* str);
+    extern inline unsigned long long sstr_toLong(SString* str);
+    extern inline unsigned long long sstr_cs_toLong(char* str);
     int sstr_smaller(SString* str1, SString* str2);
     int sstr_bigger(SString* str1, SString* str2);
     STATIC_I void sstr_removeAll(SString* str, char* replace, unsigned int size);
@@ -83,9 +83,9 @@
     void sstr_print(SString* str);
     // just like sstr_print without the \n at the end
     void sstr_printf(SString* str);  
-    EXTERN_I int sstr_isEmpty(SString* str);
+    extern inline int sstr_isEmpty(SString* str);
     void sstr_clear(SString* str);
-    EXTERN_I unsigned int sstr_gsize(SString* str);
+    extern inline unsigned int sstr_gsize(SString* str);
     // appends char ch a certain amount to str
     void sstr_fill(SString* str, char ch, unsigned int amount);
     // starts parsing at end of <str>

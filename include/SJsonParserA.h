@@ -1,23 +1,22 @@
 /* json parser for arrays */
 #ifndef SJPARSER_ARR_H
-    #define SJPARSER_ARR_H
-    #ifdef __cplusplus
-        extern "C" {
-    #endif
+#define SJPARSER_ARR_H
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <unistd.h>
+#include "JsonValue.h"
 
-    #include "../Storage/SVector.h"
-    #include "../Utils/Convert.h"
-    #include "../Utils/SString.h"
-    #include "../Utils/inline.h"
-    #include "SJsonParser.h"
-    #include "JsonValue.h"
+    typedef struct SVector SVector;
+    typedef struct SQTree SQTree;
+    typedef struct SString SString;
 
-    #define sjs_arr_delete(arr) svect_delete(arr)
-    #define sjs_arr_createEmptyData() svect_create()
+#define sjs_arr_delete(arr) svect_delete(arr)
+#define sjs_arr_createEmptyData() svect_create()
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
 
     SQTree *sjs_arr_loadFile(char *file);
     SVector *sjs_arr_parseString(char *str);
@@ -31,8 +30,9 @@
     char *sjs_arr_toCString(SVector *arr);
     int sjs_arr_appendElement(char *file, char *element, unsigned int size);
 
+#pragma GCC diagnostic pop
 
 #ifdef __cplusplus
-        }
-    #endif
+}
+#endif
 #endif
