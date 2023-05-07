@@ -17,7 +17,7 @@ SQTree* sqtr_clone(SQTree* tree)
     return res;
 }
 
-STATIC_I int sqtr_keyeqval(char*key1, char*key2)
+static inline int sqtr_keyeqval(char*key1, char*key2)
 {
     for(;*key1!=null; key1++, key2++)
     {
@@ -196,14 +196,10 @@ void* sqtr_get(SQTree* tree, char* key)
         tree = tree->ln;
         continue;
     }
+    /* statement not needed but required to prevent c++ warning */ return null;
 }
 
-EXTERN_I int sqtr_contains(SQTree* tree, char* key)
-{
-    return sqtr_get(tree, key) == null;
-}
-
-STATIC_I void _sqtr_insertn(SQNode* start, unsigned int startb, SQNode* insert)
+static inline void _sqtr_insertn(SQNode* start, unsigned int startb, SQNode* insert)
 {
     /* recursively insert subnodes */
     if(insert->rn != null)
@@ -365,10 +361,11 @@ void*sqtr_pop(SQTree* tree, char* key)
         tree = next; 
         continue;
     }
+    /* statement not needed but required to prevent c++ warning */return null;
 }
 
 
-EXTERN_I SQNode*sqtr_popl(SQTree* tree)
+SQNode*sqtr_popl(SQTree* tree)
 {
     SQNode*_tree = tree;
     SQNode*previous = tree;
@@ -402,23 +399,29 @@ EXTERN_I SQNode*sqtr_popl(SQTree* tree)
     }
 }
 
-EXTERN_I void sqtr_free(SQTree*tree)
+extern inline int sqtr_contains(SQTree *tree, char *key)
 {
-    if(sqtr_empty(tree))
+    return sqtr_get(tree, key) == null;
+}
+
+void sqtr_free(SQTree *tree)
+{
+    if (sqtr_empty(tree))
         return;
-    for(SQNode* node = sqtr_popl(tree);;node = sqtr_popl(tree))
+    for (SQNode *node = sqtr_popl(tree);; node = sqtr_popl(tree))
     {
-        if(node->key != null)
+        if (node->key != null)
             free(node->key);
-        if(node->value != null)
+        if (node->value != null)
             free(node->value);
         free(node);
-        if(sqtr_empty(tree))
+        if (sqtr_empty(tree))
             break;
     }
     free(tree);
 }
 
+/* not required */
 debug void sqtr_print(SQTree*tree)
 {
     /* get window size */
@@ -449,7 +452,7 @@ debug void sqtr_printn(SQTree*tree, SQNode*node, int col, int row)
     if(node->key != null)
         sstr_appendcs(str, node->key);
     else
-        sstr_appendcs(str, "null");
+        sstr_appendcs(str, (char*)"null");
     printf("\033[%dm", 30 + rand()%9); /* colour text */
     sstr_printf(str);
     printf("\033[0m"); /* reset color */

@@ -12,24 +12,26 @@
     #include "../Storage/SVector.h"
     #include "../Utils/Convert.h"
     #include "../Utils/SString.h"
-    #include "../Utils/inline.h"
     #include "SJsonParser.h"
     #include "JsonValue.h"
+
+    typedef SVector JsonArrayData;
 
     #define sjs_arr_delete(arr) svect_delete(arr)
     #define sjs_arr_createEmptyData() svect_create()
 
-    SQTree *sjs_arr_loadFile(char *file);
+    SVector *sjs_arr_loadFile(char *file);
+    void sjs_arr_save(SVector *json, char *file);
     SVector *sjs_arr_parseString(char *str);
     void sjs_arr_setValue(SVector *array, unsigned int index, JsonValueType value);
     void sjs_arr_appendValue(SVector *array, JsonValueType value);
     static inline char *_sjs_arr_getitem(char *p, SVector *vect);
     static inline char *_sjs_arr_getopen(char *str);
-    extern inline JsonValue sjs_arr_getValue(SVector *arr, unsigned int index);
-    extern inline JsonValueType sjs_arr_getValueAndType(SVector *arr, unsigned int index);
+    JsonValue sjs_arr_getValue(SVector *arr, unsigned int index);
+    JsonValueType sjs_arr_getValueAndType(SVector *arr, unsigned int index);
     SString *sjs_arr_toString(SVector *arr);
     char *sjs_arr_toCString(SVector *arr);
-    int sjs_arr_appendElement(char *file, char *element, unsigned int size);
+    void sjs_arr_appendElement(char *file, char *element, unsigned int size);
 
 
 #ifdef __cplusplus

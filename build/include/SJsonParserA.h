@@ -6,10 +6,10 @@
     #endif
     #include "SJsonParser.h"
     #include "JsonValue.h"
+    #include "SString.h"
 
     struct SQTree;
     struct SVector;
-    struct SString;
 
     typedef struct SVector JsonArrayData;
 
@@ -18,7 +18,7 @@
     struct SVector *svect_create();
     #define sjs_arr_createEmptyData() svect_create()
 
-        struct SVector *sjs_arr_loadFile(char *file);
+    struct SVector *sjs_arr_loadFile(char *file);
     void sjs_arr_save(struct SVector *json, char *file);
     struct SVector *sjs_arr_parseString(char *str);
     void sjs_arr_setValue(struct SVector *array, unsigned int index, JsonValueType value);
@@ -27,7 +27,7 @@
     static inline char *_sjs_arr_getopen(char *str);
     JsonValue sjs_arr_getValue(struct SVector *arr, unsigned int index);
     JsonValueType sjs_arr_getValueAndType(struct SVector *arr, unsigned int index);
-    struct SString *sjs_arr_toString(struct SVector *arr);
+    SString *sjs_arr_toString(struct SVector *arr);
     char *sjs_arr_toCString(struct SVector *arr);
     void sjs_arr_appendElement(char *file, char *element, unsigned int size);
 

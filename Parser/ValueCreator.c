@@ -1,6 +1,6 @@
 #include "JsonValue.h"
 
-inline JsonValueType sjs_createValueDouble(double value)
+JsonValueType sjs_createValueDouble(double value)
 {
     JsonValueType type;
     type.type = _SJS_EXTENDED_DOUBLE;
@@ -8,7 +8,7 @@ inline JsonValueType sjs_createValueDouble(double value)
     return type;
 }
 
-inline JsonValueType sjs_createValueString(char *value)
+JsonValueType sjs_createValueString(char *value)
 {
     JsonValueType type;
     type.type = _SJS_STRING;
@@ -16,7 +16,7 @@ inline JsonValueType sjs_createValueString(char *value)
     return type;
 }
 
-inline JsonValueType sjs_createValueInt(int value)
+JsonValueType sjs_createValueInt(int value)
 {
     JsonValueType type;
     type.type = _SJS_EXTENDED_INT;
@@ -24,7 +24,7 @@ inline JsonValueType sjs_createValueInt(int value)
     return type;
 }
 
-inline JsonValueType sjs_createValueLong(long long value)
+JsonValueType sjs_createValueLong(long long value)
 {
     JsonValueType type;
     type.type = _SJS_EXTENDED_LONG;
@@ -32,7 +32,7 @@ inline JsonValueType sjs_createValueLong(long long value)
     return type;
 }
 
-inline JsonValueType sjs_createValueBool(char value)
+JsonValueType sjs_createValueBool(char value)
 {
     JsonValueType type;
     type.type = _SJS_BOOL;
@@ -40,7 +40,7 @@ inline JsonValueType sjs_createValueBool(char value)
     return type;
 }
 
-inline JsonValueType sjs_createValueArray(SVector* value)
+JsonValueType sjs_createValueArray(SVector *value)
 {
     JsonValueType type;
     type.type = _SJS_ARRAY;
@@ -48,10 +48,10 @@ inline JsonValueType sjs_createValueArray(SVector* value)
     return type;
 }
 
-inline JsonValueType sjs_createValueJson(SQTree *value)
+JsonValueType sjs_createValueJson(SQTree *value)
 {
     JsonValueType type;
     type.type = _SJS_JSON;
-    type.value._jsonArray = value;
+    type.value._jsonData = value;
     return type;
 }

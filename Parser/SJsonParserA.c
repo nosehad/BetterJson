@@ -6,7 +6,13 @@ static inline char *_sjs_arr_getopen(char *str)
     return str + 1;
 }
 
-SQTree *sjs_arr_loadFile(char *file)
+static inline void _sjs_copy(char *dest, char *start, char *end)
+{
+    for (; start <= end; ++start, ++dest)
+        *dest = *start;
+}
+
+SVector *sjs_arr_loadFile(char *file)
 {
     int fd = open(file, O_RDONLY);
     if (fd == -1)
@@ -49,7 +55,7 @@ void sjs_arr_setValue(SVector *array, unsigned int index, JsonValueType value)
         if (value.value._string == null)
         {
             char *value_str = (char *)malloc(7);
-            _sjs_copy(value_str + 1, "null", "null" + 3);
+            _sjs_copy(value_str + 1, (char*)"null", ((char*)"null") + 3);
             *(value_str + 5) = '\00';
             *value_str = _SJS_NULL;
             svect_set(array, index, value_str);
@@ -92,13 +98,13 @@ void sjs_arr_setValue(SVector *array, unsigned int index, JsonValueType value)
         if (value.value._bool == 0)
         {
             value_str = (char *)malloc(7);
-            _sjs_copy(value_str + 1, "false", "false" + 4);
+            _sjs_copy(value_str + 1, (char*)"false", ((char*)"false") + 4);
             *(value_str + 6) = '\00';
         }
         else
         {
             value_str = (char *)malloc(7);
-            _sjs_copy(value_str + 1, "true", "true" + 3);
+            _sjs_copy(value_str + 1, (char*)"true", ((char*)"true") + 3);
             *(value_str + 5) = '\00';
         }
         *value_str = _SJS_BOOL;
@@ -107,7 +113,7 @@ void sjs_arr_setValue(SVector *array, unsigned int index, JsonValueType value)
     }
     case _SJS_JSON:
     {
-        svect_set(array, index, sjs_toCString(value.value._jsonArray));
+        svect_set(array, index, sjs_toCString(value.value._jsonData));
         break;
     }
     case _SJS_ARRAY:
@@ -127,7 +133,7 @@ void sjs_arr_appendValue(SVector *array, JsonValueType value)
         if (value.value._string == null)
         {
             char *value_str = (char *)malloc(7);
-            _sjs_copy(value_str + 1, "null", "null" + 3);
+            _sjs_copy(value_str + 1, (char*)"null", ((char*)"null") + 3);
             *(value_str + 5) = '\00';
             *value_str = _SJS_NULL;
             svect_insertNoCopy(array, value_str);
@@ -170,13 +176,13 @@ void sjs_arr_appendValue(SVector *array, JsonValueType value)
         if (value.value._bool == 0)
         {
             value_str = (char *)malloc(7);
-            _sjs_copy(value_str + 1, "false", "false" + 4);
+            _sjs_copy(value_str + 1, (char*)"false", ((char*)"false") + 4);
             *(value_str + 6) = '\00';
         }
         else
         {
             value_str = (char *)malloc(7);
-            _sjs_copy(value_str + 1, "true", "true" + 3);
+            _sjs_copy(value_str + 1, (char*)"true", ((char*)"true") + 3);
             *(value_str + 5) = '\00';
         }
         *value_str = _SJS_BOOL;
@@ -185,7 +191,7 @@ void sjs_arr_appendValue(SVector *array, JsonValueType value)
     }
     case _SJS_JSON:
     {
-        svect_insertNoCopy(array, sjs_toCString(value.value._jsonArray));
+        svect_insertNoCopy(array, sjs_toCString(value.value._jsonData));
         break;
     }
     }
@@ -216,7 +222,7 @@ static inline char *_sjs_arr_getitem(char *p, SVector *vect)
     /* null */
     case 'n':
         type = _SJS_NULL;
-        val = "null";
+        val = (char*)"null";
         _start = val;
         _end = val + 3;
         p = p + 4;
@@ -224,7 +230,7 @@ static inline char *_sjs_arr_getitem(char *p, SVector *vect)
     /* booleans with value false */
     case 'f':
         type = _SJS_BOOL;
-        val = "false";
+        val = (char*)"false";
         _start = val;
         _end = val + 4;
         p = p + 5;
@@ -232,7 +238,7 @@ static inline char *_sjs_arr_getitem(char *p, SVector *vect)
     /* booleans with value true */
     case 't':
         type = _SJS_BOOL;
-        val = "true";
+        val = (char*)"true";
         _start = val;
         _end = val + 3;
         p = p + 4;
@@ -263,9 +269,9 @@ static inline char *_sjs_arr_getitem(char *p, SVector *vect)
         if (*p <= '0' || *p >= '9') /* nan */
         {
             type = _SJS_NULL;
-            _start = "NaN";
+            _start = (char*)"NaN";
             _end = _start + 2;
-            p = "\00";
+            p = (char*)"\00";
             break;
         }
         type = _SJS_NUM;
@@ -290,7 +296,7 @@ static inline char *_sjs_arr_getitem(char *p, SVector *vect)
 }
 
 /* get functions */
-inline JsonValue sjs_arr_getValue(SVector *arr, unsigned int index)
+JsonValue sjs_arr_getValue(SVector *arr, unsigned int index)
 {
     char *result = svect_get(arr, index);
     JsonValue value;
@@ -328,7 +334,7 @@ inline JsonValue sjs_arr_getValue(SVector *arr, unsigned int index)
         value._jsonData = sjs_parseString(result);
         return value;
     case _SJS_BOOL:
-        value._bool = strcmp(result, "true") == 0;
+        value._bool = strcmp(result, (char*)"true") == 0;
         return value;
     default:
         value._string = null;
@@ -336,7 +342,7 @@ inline JsonValue sjs_arr_getValue(SVector *arr, unsigned int index)
     }
 }
 
-inline JsonValueType sjs_arr_getValueAndType(SVector *arr, unsigned int index)
+JsonValueType sjs_arr_getValueAndType(SVector *arr, unsigned int index)
 {
     char *result = svect_get(arr, index);
     JsonValueType type;
@@ -381,7 +387,7 @@ inline JsonValueType sjs_arr_getValueAndType(SVector *arr, unsigned int index)
         type.type = _SJS_JSON;
         return type;
     case _SJS_BOOL:
-        type.value._bool = strcmp(result, "true") == 0;
+        type.value._bool = strcmp(result, (char*)"true") == 0;
         type.type = _SJS_BOOL;
         return type;
     default:
@@ -393,8 +399,8 @@ inline JsonValueType sjs_arr_getValueAndType(SVector *arr, unsigned int index)
 
 void sjs_arr_save(SVector *array, char *file)
 {
-    FILE *f = fopen(file, "w");
-    if (f == -1)
+    FILE *f = fopen(file, (char*)"w");
+    if (f == null)
     {
         perror("open");
         exit(1);
@@ -412,7 +418,7 @@ void sjs_arr_save(SVector *array, char *file)
 
 SString *sjs_arr_toString(SVector *arr)
 {
-    SString* str = sstr_creates("[",1);
+    SString* str = sstr_creates((char*)"[",1);
     for (unsigned int i = 0; i < arr->size; ++i)
     {
         char *val = svect_get(arr, i);
@@ -425,7 +431,7 @@ SString *sjs_arr_toString(SVector *arr)
         else
             sstr_appendcs(str, val + 1);
         if (i < (arr->size - 1))
-            sstr_appendcs(str, ",");
+            sstr_appendcs(str, (char*)",");
         free(val);
     }
     sstr_appendc(str, ']');
@@ -436,8 +442,9 @@ SString *sjs_arr_toString(SVector *arr)
 
 char *sjs_arr_toCString(SVector *arr)
 {
-    sstr_createsOnStack(str, "[\n", 2);
-    sstr_appendc(str, _SJS_ARRAY);
+    char c[2] = {_SJS_ARRAY, '['};
+    sstr_createsOnStack(str, (char*)&c, 2);
+
     for (unsigned int i = 0; i < arr->size; ++i)
     {
         char *val = svect_get(arr, i);
@@ -449,26 +456,30 @@ char *sjs_arr_toCString(SVector *arr)
         }
         else
             sstr_appendcs(str, val + 1);
-        if (i == (arr->size - 1))
-            sstr_appendc(str, '\n');
-        else
-            sstr_appendcs(str, ",\n");
+        if (i < (arr->size - 1))
+            sstr_appendcs(str, (char *)",");
         free(val);
     }
     sstr_appendc(str, ']');
     free(arr->vect);
     free(arr);
-    return sstr_serialize(str);
+    return str->s_str;
 }
 
-int sjs_arr_appendElement(char *file, char *element, unsigned int size)
+void sjs_arr_appendElement(char *file, char *element, unsigned int size)
 {
     int fd = open(file, O_RDWR);
     if (fd == 0)
+    {
         perror("open");
+        exit(-1);
+    }
     struct stat info;
     if (fstat(fd, &info) != 0)
+    {
         perror("fstat");
+        exit(-1);
+    }
     int pos = info.st_size;
     find_pos:
     if (pos > 10)
@@ -481,7 +492,7 @@ int sjs_arr_appendElement(char *file, char *element, unsigned int size)
             if (_buff == (char*)&buff)
                 goto find_pos;
         lseek(fd, pos, SEEK_SET);
-        convert_dprintf(fd, "\n  ,%x\n]", element, size);
+        convert_dprintf(fd, (char*)"\n  ,%x\n]", element, size);
     }
     else
     {
@@ -491,9 +502,9 @@ int sjs_arr_appendElement(char *file, char *element, unsigned int size)
         buff[info.st_size] = '\00';
         for (char *_buff = ((char*)&buff) + info.st_size; *_buff != ']'; _buff--, pos--)
             if (_buff == (char *)&buff)
-                return -1;
+                return;
         lseek(fd, pos, SEEK_SET);
-        convert_dprintf(fd, "  %x\n]", element, size);
+        convert_dprintf(fd, (char*)"  %x\n]", element, size);
     }
     close(fd);
 }

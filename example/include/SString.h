@@ -3,14 +3,8 @@
     #ifdef __cplusplus
         extern "C" {
     #endif
-    #include <stdlib.h>
-    #include <string.h>
-    #include <stdarg.h>
+
     #include <stdio.h>
-    #include <fcntl.h>
-    /* posix only */
-    #include <unistd.h>
-    #include <sys/stat.h>
 
     #include "null.h"
 

@@ -15,7 +15,7 @@ SString* sstr_createcs(char* str)
     return sstring;
 }
 
-SString* sstr_creates(char* str, sstr_size size)
+struct _sstring* sstr_creates(char* str, sstr_size size)
 {
     SString* sstring = (SString*)malloc(sizeof(SString));
 
@@ -73,41 +73,52 @@ SString* sstr_clone(SString* str)
     return ret;
 }
 
-inline void sstr_truncate(struct _sstring*str, sstr_size size)
+void sstr_appendcs(struct _sstring* base, char* str)
 {
-    str->s_size = size;
-    /* extend size of string */
-    for(;str->s_capacity < str->s_size; str->s_capacity *= 2)
-        str->s_str = (char*)realloc(str->s_str, str->s_capacity);
+    for(;*str != null;str++)
+       sstr_appendc(base, *str);
 }
 
-inline char* sstr_serialize(SString* str)
+char *sstr_serialize(SString *str)
 {
-    if(str->s_capacity == str->s_size)
+    if (str->s_capacity == str->s_size)
     {
-        str->s_capacity *= 2;
-        str->s_str = (char*)realloc(str->s_str, str->s_capacity);
+       str->s_capacity *= 2;
+       str->s_str = (char *)realloc(str->s_str, str->s_capacity);
     }
     *(str->s_str + str->s_size) = '\00';
     return str->s_str;
 }
-
-
-inline void sstr_appendc(SString* str, char ch)
+ 
+void sstr_appendc(SString *str, char ch)
 {
-    if(str->s_capacity == str->s_size)
+    if (str->s_capacity == str->s_size)
     {
-        str->s_capacity *= 2;
-        str->s_str = (char*)realloc(str->s_str, str->s_capacity);
+       str->s_capacity *= 2;
+       str->s_str = (char *)realloc(str->s_str, str->s_capacity);
     }
     *(str->s_str + str->s_size) = ch;
     str->s_size++;
 }
 
-void sstr_appendcs(struct _sstring* base, char* str)
+unsigned long long sstr_toLong(SString *str)
 {
-    for(;*str != null;str++)
-       sstr_appendc(base, *str);
+    unsigned long long ret = 1;
+    int i;
+    for (i = 0; i < str->s_size; ++i)
+    {
+       ret += *(str->s_str + i);
+       ret <<= 1;
+    }
+    return ret;
+}
+
+void sstr_truncate(struct _sstring *str, sstr_size size)
+{
+    str->s_size = size;
+    /* extend size of string */
+    for (; str->s_capacity < str->s_size; str->s_capacity *= 2)
+       str->s_str = (char *)realloc(str->s_str, str->s_capacity);
 }
 
 void sstr_appends(SString* base, char* str, unsigned int size)
@@ -206,31 +217,7 @@ int sstr_startswith(SString* base, char* start, unsigned int start_size)
     return 1;
 }
 
-inline unsigned long long sstr_toLong(SString* str)
-{
-    unsigned long long ret = 1;
-    int i;
-    for(i = 0; i < str->s_size; ++i)
-    {
-        ret += *(str->s_str + i);
-        ret <<= 1;
-    }
-    return ret;
-}
-
-inline unsigned long long sstr_cs_toLong(char* str)
-{
-    unsigned long long ret = 1;
-    int i;
-    for(;*str != 0;str++)
-    {
-        ret += *str;
-        ret <<= 1;
-    }
-    return ret;
-}
-
-STATIC_I int sstr_smallerth(SString* str1, SString* str2)
+static inline int sstr_smallerth(SString* str1, SString* str2)
 {
     int size = str1->s_size > str2->s_size ? str1->s_size : str2->s_size;
     int i;
@@ -261,7 +248,7 @@ void sstr_delete(SString* sstr)
     free(sstr);
 }
 
-STATIC_I void sstr_remove(SString* str, unsigned int a, unsigned int b)
+static inline void sstr_remove(SString* str, unsigned int a, unsigned int b)
 {
     //printf("%d %d\n", str->s_size, b);
     //printf("%d %d %d\n", str->s_str +a, str->s_str+b, str->s_size-b);
@@ -269,7 +256,7 @@ STATIC_I void sstr_remove(SString* str, unsigned int a, unsigned int b)
     str->s_size -= (b-a);
 }
 
-STATIC_I void sstr_removeAll(SString* str, char* remove, unsigned int size)
+static inline void sstr_removeAll(SString* str, char* remove, unsigned int size)
 {
     int p = 0;
     int end_p;
@@ -329,7 +316,7 @@ void sstr_printf(SString* str)
     fwrite(str->s_str, str->s_size, 1, stdout); 
 }
 
-STATIC_I void sstr_insert(SString* str, unsigned int pos, char* insert, unsigned int isize)
+static inline void sstr_insert(SString* str, unsigned int pos, char* insert, unsigned int isize)
 {
     extend: if(str->s_capacity < str->s_size+isize)
     {
@@ -396,19 +383,9 @@ void sstr_appendd(struct _sstring* base, long long num)
     sstr_appends(base, appe + (64-i), i);
 }
 
-inline int sstr_isEmpty(SString* str)
-{
-    return (str->s_size == 0);
-}
-
 void sstr_clear(SString* str)
 {
     str->s_size = 0;
-}
-
-inline unsigned int sstr_gsize(SString* str)
-{
-    return str->s_size;
 }
 
 void sstr_fill(SString* base, char ch, unsigned int amount)

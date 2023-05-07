@@ -4,17 +4,21 @@
 <h2>Setup</h2>
 <ul>
 <li>
-<p>Add the needed source files to your compile path: <strong>Parser/*.c</strong>, 
-<strong>Storage/*.c</strong> and <strong>Utils/*.c</strong></p>
+<p>Download the BetterJson library from  <a href="https://github.com/nosehad/BetterJson/releases/download/v0.1.2-alpha/libbjson.tar.xz">here</a> and unpack the archive. </p>
 </li>
 <li>
 <p>Include <strong>Parser/SJsonParser.c</strong> and <strong>Parser/SJsonParserA.c</strong> for Json Arrays.</p>
 </li>
 <li>
-<p>Include Parser/SJsonParser.c and Parser/SJsonParserA.c for Json Arrays.</p>
+<p>Parse a Json file by calling sjs_loadFile(...)</p>
 </li>
 <li>
-<p>Parse a Json file by calling sjs_loadFile(...)</p>
+<p>Compile and execute using gcc: </p>
+
+```bash
+gcc -o <yourname> <sourcefiles>.c ./libbjson.so && ./<yourname>
+``` 
+
 </li>
 </ul>
 
@@ -33,13 +37,13 @@
 <p>Start by loading the Json file...</p>
 
 ```cpp
-#include "Parser/SJsonParser.h" /* basic json parser */
-#include "Parser/SJsonParserA.h" /* json parser for arrays */
+#include "include/SJsonParser.h" /* basic json parser */
+#include "include/SJsonParserA.h" /* json parser for arrays */
 
 void main()
 {
     /* load example.json */
-    SQTree*json = sjs_loadFile("example.json");
+    JsonData* json = sjs_loadFile("example.json");
     /* set name to "Hans Wurst" */
     sjs_setPair(json, "name", sjs_createValueString("Hans Wurst"));
     /* set age property to  15.5 */
@@ -48,7 +52,7 @@ void main()
     sjs_setPair(json, "male", sjs_createValueBool(1));
 
     /* load pet array */
-    SVector*json_array = sjs_getValue(json, "pets")._jsonArray;
+    JsonArrayData* json_array = sjs_getValue(json, "pets")._jsonArray;
     /* get second item of pet array */
     printf("First pet: %s\n", sjs_arr_getValue(sjs_getValue(json, "pets")._jsonArray, 1)._string);
     /* free array */
