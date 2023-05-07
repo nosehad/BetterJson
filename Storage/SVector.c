@@ -6,6 +6,7 @@ SVector* svect_create()
     vector->capacity = sizeof(char*)*16;
     vector->vect = (char**) malloc(vector->capacity);
     vector->size = 0;
+    return vector;
 }
 
 void svect_insert(SVector* vector, char* value)
@@ -31,7 +32,17 @@ void svect_insertNoCopy(SVector *vector, char *value)
     }
 }
 
-EXTERN_I void svect_remove(SVector *vector, unsigned int index)
+void svect_delete(SVector*vector)
+{
+    char **start = vector->vect;
+    char **end = vector->vect + vector->size;
+    for (; start != end; ++start)
+        free(*start);
+    free(vector->vect);
+    free(vector);
+}
+
+extern void svect_remove(SVector *vector, unsigned int index)
 {
     /* free old element */
     free(*(vector->vect + index));
@@ -40,7 +51,7 @@ EXTERN_I void svect_remove(SVector *vector, unsigned int index)
     vector->size--;
 }
 
-EXTERN_I char *svect_pop(SVector *vector, unsigned int index)
+extern char *svect_pop(SVector *vector, unsigned int index)
 {
     char *ret = *(vector->vect + index);
     /* movup array */
@@ -49,9 +60,9 @@ EXTERN_I char *svect_pop(SVector *vector, unsigned int index)
     return ret;
 }
 
-EXTERN_I char* svect_popl(SVector *vector)
+extern char *svect_popl(SVector *vector)
 {
-    char* ret = null;
+    char *ret = null;
     if (vector->size > 0)
     {
         ret = *(vector->vect + vector->size - 1);
@@ -61,23 +72,13 @@ EXTERN_I char* svect_popl(SVector *vector)
     return ret;
 }
 
-EXTERN_I void svect_set(SVector* vector, unsigned int i, char* value)
+extern void svect_set(SVector *vector, unsigned int i, char *value)
 {
     free(*(vector->vect + i));
     *(vector->vect + i) = value;
 }
 
-EXTERN_I char* svect_get(SVector* vector, unsigned int index)
+extern char *svect_get(SVector *vector, unsigned int index)
 {
-    return *(vector->vect+index);
-}
-
-void svect_delete(SVector*vector)
-{
-    char **start = vector->vect;
-    char **end = vector->vect + vector->size;
-    for (; start != end; ++start)
-        free(*start);
-    free(vector->vect);
-    free(vector);
+    return *(vector->vect + index);
 }

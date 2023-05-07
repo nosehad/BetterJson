@@ -1,0 +1,10 @@
+{
+    "name": "Bob Nagel",
+    "age": 40,
+    "city": "Chicago",
+    "pets": [
+        "dog",
+        "bird",
+        "turtle"
+    ]
+}

@@ -29,19 +29,19 @@
         SVector* _jsonArray;
     };
 
-    typedef struct sjs_jsonValueType JsonValueType;
-    struct sjs_jsonValueType
+    typedef struct _sjs_jsonValueType JsonValueType;
+    struct _sjs_jsonValueType
     {
         union _sjs_jsonValue value;
         int type;
     };
 
-    extern inline JsonValueType sjs_createValueDouble(double value);
-    extern inline JsonValueType sjs_createValueString(char* value);
-    extern inline JsonValueType sjs_createValueInt(int value);
-    extern inline JsonValueType sjs_createValueLong(long long value);
-    extern inline JsonValueType sjs_createValueBool(char value);
-    extern inline JsonValueType sjs_createValueJson(SQTree* value);
-    extern inline JsonValueType sjs_createValueArray(SVector* value);
+    extern JsonValueType sjs_createValueDouble(double value);
+    extern JsonValueType sjs_createValueString(char *value);
+    extern JsonValueType sjs_createValueInt(int value);
+    extern JsonValueType sjs_createValueLong(long long value);
+    extern JsonValueType sjs_createValueBool(char value);
+    extern JsonValueType sjs_createValueArray(SVector *value);
+    extern JsonValueType sjs_createValueJson(SQTree *value);
 
 #endif

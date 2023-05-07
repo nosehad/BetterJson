@@ -1,6 +1,6 @@
 #include "SJsonParser.h"
 
-inline void _sjs_copy(char *dest, char *start, char *end)
+static inline void _sjs_copy(char *dest, char *start, char *end)
 {
     for (; start <= end; ++start, ++dest)
         *dest = *start;
@@ -12,7 +12,7 @@ static inline void _sjs_setKey(SString *str, char *key, char *val, int padding)
         sstr_appendc(str, ' ');
     sstr_appendc(str, '\"');
     sstr_appendcs(str, key);
-    sstr_appendcs(str, "\":");
+    sstr_appendcs(str, (char*)"\":");
     if (*val == _SJS_STRING)
     {
         sstr_appendc(str, '\"');
@@ -57,8 +57,8 @@ SQTree *sjs_loadFile(char *file)
 
 void sjs_save(SQTree* json, char* file)
 {
-    FILE* f = fopen(file, "w");
-    if (f == -1)
+    FILE* f = fopen(file, (char*)"w");
+    if (f == null)
     {
         perror("open");
         exit(1);
@@ -87,7 +87,7 @@ void sjs_setPair(SQTree* json, char* key, JsonValueType value)
             if(value.value._string == null)
             {
                 char* value_str = (char *)malloc(7);
-                _sjs_copy(value_str + 1, "null", "null" + 3);
+                _sjs_copy(value_str + 1, (char*)"null", ((char*)"null") + 3);
                 *(value_str + 5) = '\00';
                 *value_str = _SJS_NULL;
                 sqtr_setNoCopy(json, key_str->s_str, value_str);
@@ -134,21 +134,24 @@ void sjs_setPair(SQTree* json, char* key, JsonValueType value)
             if (value.value._bool == 0)
             {
                 value_str = (char *)malloc(7);
-                _sjs_copy(value_str+1, "false", "false"+4);
+                _sjs_copy(value_str+1, (char*)"false", ((char*)"false")+4);
                 *(value_str + 6) = '\00';
             }
             else 
             {
                 value_str = (char *)malloc(7);
-                _sjs_copy(value_str + 1, "true", "true" + 3);
+                _sjs_copy(value_str + 1, (char*)"true", ((char*)"true") + 3);
                 *(value_str + 5) = '\00';
             }
             *value_str = _SJS_BOOL;
+            sstr_serialize(key_str);
             sqtr_setNoCopy(json, key_str->s_str, value_str);
             break;
         }
         case _SJS_ARRAY:
         {
+            sstr_serialize(key_str);
+            //printf("%s\n", sjs_arr_toCString(value.value._jsonArray)); exit(-1);
             sqtr_setNoCopy(json, key_str->s_str, sjs_arr_toCString(value.value._jsonArray));
             break;
         }
@@ -229,21 +232,21 @@ static inline char *_sjs_parsePair(char *p, SQTree *json)
     /* null */
     case 'n':
         type = _SJS_NULL;
-        _start = "null";
+        _start = (char*)"null";
         _end = ((char *)"null") + 3;
         p = p + 4;
         break;
     /* booleans with value false */
     case 'f':
         type = _SJS_BOOL;
-        _start = "false";
+        _start = (char*)"false";
         _end = ((char *)"false") + 4;
         p = p + 5;
         break;
     /* booleans with value true */
     case 't':
         type = _SJS_BOOL;
-        _start = "true";
+        _start = (char*)"true";
         _end = ((char *)"true") + 3;
         p = p + 4;
         break;
@@ -272,17 +275,15 @@ static inline char *_sjs_parsePair(char *p, SQTree *json)
 }
 
 /* get functions */
-inline JsonValue sjs_getValue(SQTree *json, char *key)
+JsonValue sjs_getValue(SQTree *json, char *key)
 {
     char *result = (char *)sqtr_get(json, key);
     JsonValue value;
     if (result == null)
     {
-        printf("true\n");
         value._string = null;
         return value;
     }
-    printf("%d\n",convert_getType(result));
     switch (*(result++))
     {
     case _SJS_NUM:
@@ -315,7 +316,7 @@ inline JsonValue sjs_getValue(SQTree *json, char *key)
         value._jsonArray = sjs_arr_parseString(result);
         return value;
     case _SJS_BOOL:
-        value._bool = strcmp(result, "true") == 0;
+        value._bool = strcmp(result, (char*)"true") == 0;
         return value;
     default:
         value._string = null;
@@ -323,7 +324,7 @@ inline JsonValue sjs_getValue(SQTree *json, char *key)
     }
 }
 
-inline JsonValueType sjs_getValueAndType(SQTree *json, char *key)
+JsonValueType sjs_getValueAndType(SQTree *json, char *key)
 {
     char *result = (char *)sqtr_get(json, key);
     JsonValueType type;
@@ -372,7 +373,7 @@ inline JsonValueType sjs_getValueAndType(SQTree *json, char *key)
         type.type = _SJS_ARRAY;
         return type;
     case _SJS_BOOL:
-        type.value._bool = strcmp(result, "true") == 0;
+        type.value._bool = strcmp(result, (char*)"true") == 0;
         type.type = _SJS_BOOL;
         return type;
     default:
@@ -396,7 +397,7 @@ SString *sjs_toString(SQTree *json)
     SString* res = sstr_createe();
     if (sqtr_empty(json))
     {   
-        sstr_appends(res, "{}", 2);
+        sstr_appends(res, (char*)"{}", 2);
         return res;
     }
     sstr_appendc(res, '{');
@@ -404,7 +405,7 @@ SString *sjs_toString(SQTree *json)
     {
         sstr_appendc(res, '\"');
         sstr_appendcs(res, node->key);
-        sstr_appendcs(res, "\":");
+        sstr_appendcs(res, (char*)"\":");
         if (*node->value == _SJS_STRING)
         {
             sstr_appendc(res, '\"');
@@ -432,7 +433,7 @@ char *sjs_toCString(SQTree *json)
     sstr_appendc(res, _SJS_JSON);
     if (sqtr_empty(json))
     {
-        sstr_appends(res, "{}", 2);
+        sstr_appends(res, (char*)"{}", 2);
         return sstr_serialize(res);
     }
     sstr_appendc(res, '{');
@@ -440,7 +441,7 @@ char *sjs_toCString(SQTree *json)
     {
         sstr_appendc(res, '\"');
         sstr_appendcs(res, node->key);
-        sstr_appendcs(res, "\":");
+        sstr_appendcs(res, (char*)"\":");
         if (*node->value == _SJS_STRING)
         {
             sstr_appendc(res, '\"');
@@ -462,7 +463,7 @@ char *sjs_toCString(SQTree *json)
     return sstr_serialize(res);
 }
 
-int sjs_appendElement(char *file, char *element, unsigned int size)
+void sjs_appendElement(char *file, char *element, unsigned int size)
 {
     int fd = open(file, O_RDWR);
     if (fd == 0)
@@ -482,7 +483,7 @@ find_pos:
             if (_buff == (char *)&buff)
                 goto find_pos;
         lseek(fd, pos, SEEK_SET);
-        convert_dprintf(fd, "\n  ,%x\n}", element, size);
+        convert_dprintf(fd, (char*)"\n  ,%x\n}", element, size);
     }
     else
     {
@@ -492,9 +493,9 @@ find_pos:
         buff[info.st_size] = '\00';
         for (char *_buff = ((char *)&buff) + info.st_size; *_buff != '}'; _buff--, pos--)
             if (_buff == (char *)&buff)
-                return -1;
+                return;
         lseek(fd, pos, SEEK_SET);
-        convert_dprintf(fd, "  %x\n}", element, size);
+        convert_dprintf(fd, (char*)"  %x\n}", element, size);
     }
     close(fd);
 }

@@ -12,7 +12,7 @@
     #include <unistd.h>
     #include <sys/stat.h>
 
-    #include "null.h"
+    #define null 0
 
     typedef unsigned int sstr_size;
     typedef struct _sstring SString;

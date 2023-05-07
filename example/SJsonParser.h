@@ -6,9 +6,9 @@ extern "C"
     #endif
     #include "JsonValue.h"
     #include "SJsonParserA.h"
+    #include "SString.h"
     
     struct SQTree;
-    struct SString;
 
     typedef struct SQTree JsonData;
 
@@ -22,7 +22,7 @@ extern "C"
     struct SQTree *sjs_parseString(char *str);
     JsonValue sjs_getValue(struct SQTree *json, char *key);
     JsonValueType sjs_getValueAndType(struct SQTree *json, char *key);
-    struct SString *sjs_toString(struct SQTree *json);
+    SString *sjs_toString(struct SQTree *json);
     char *sjs_toCString(struct SQTree *json);
     void sjs_appendElement(char *file, char *element, unsigned int size);
 
