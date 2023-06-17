@@ -40,7 +40,7 @@ gcc -o <yourname> <sourcefiles>.c ./libbjson.so && ./<yourname>
 #include "include/SJsonParser.h" /* basic json parser */
 #include "include/SJsonParserA.h" /* json parser for arrays */
 
-void main()
+void main(void)
 {
     /* load example.json */
     JsonData* json = sjs_loadFile("example.json");
