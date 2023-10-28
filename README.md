@@ -1,4 +1,4 @@
-<h1>Better JSON Parser</h1>
+<h1>Better JSON Parser (Deprecated)</h1>
 <h2>DISCLAIMER</h2>
 <p>This is just an <strong>Preview</strong> release and doesn't gurantee full functionality or stability. At current point of time, it is not more than an simple example of how two write an fast JSON parser using C.</p>
 <h2>Setup</h2>
