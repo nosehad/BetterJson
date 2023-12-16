@@ -1,6 +1,6 @@
 <h1>Better JSON Parser (Deprecated)</h1>
 <h2>DISCLAIMER</h2>
-<p>I've abondened the repository, you can see this as an example of how to write BAD code. If you want an efficient Json Parser use https://github.com/Swiftense/Utility instead.</p>
+<p>I've abondened the repository, if you want an efficient Json Parser use https://github.com/Swiftense/Utility instead.</p>
 <p>This is just an <strong>Preview</strong> release and doesn't gurantee full functionality or stability. At current point of time, it is not more than an simple example of how two write an fast JSON parser using C.</p>
 <h2>Setup</h2>
 <ul>
